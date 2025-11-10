@@ -18,6 +18,7 @@ COPY . .
 # Download data from GCS during build
 RUN mkdir -p data/geo models && \
     gsutil cp gs://team-53-data/geo/zcta_3857.parquet data/geo/zcta_3857.parquet && \
-    gsutil cp gs://team-53-data/models/pipeline.joblib models/pipeline.joblib
+    gsutil cp gs://team-53-data/models/pipeline.joblib models/pipeline.joblib && \
+    gsutil cp gs://team-53-data/models/infer_meta.json models/infer_meta.json
 
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
