@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Chicago STR Evaluator</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+    </head>
+    <body class="min-h-screen flex items-center justify-center bg-gray-50">
+        <div class="w-full max-w-md p-8 bg-white shadow-lg rounded-xl">
+            <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">
+                Chicago STR Evaluator
+            </h1>
+
+            <form action="input/from_url" method="post" class="space-y-4">
+                <input
+                    type="url"
+                    name="url"
+                    placeholder="Paste listing URL..."
+                    required
+                    class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+
+                <button
+                    type="submit"
+                    class="w-full bg-blue-600 text-white font-semibold py-3 rounded-lg hover:bg-blue-700 transition">
+                    Analyze
+                </button>
+            </form>
+
+            <div class="mt-6 text-center text-sm text-gray-500">
+                or <a href="/manual" class="text-blue-600 hover:underline">enter features manually</a>
+            </div>
+        </div>
+    </body>
+</html>

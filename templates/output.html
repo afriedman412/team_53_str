@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Prediction Results</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+    </head>
+    <body class="bg-gray-50 text-gray-800 font-sans">
+        <div class="max-w-5xl mx-auto py-10">
+            <h1 class="text-3xl font-bold text-center mb-3">🏡 Property Summary</h1>
+
+            <div class="max-w-3xl mx-auto mb-8 text-center">
+                <p class="text-lg font-medium text-gray-900">
+                    {{ address }}
+                </p>
+                <div class="mt-2 flex items-center justify-center gap-2 text-sm">
+                    {% if prop_dict.latitude and prop_dict.longitude %}
+                    <span class="px-2 py-1 rounded-full bg-gray-100 text-gray-600">
+                        {{ prop_dict.latitude | comma(6) }}, {{ prop_dict.longitude | comma(6) }}
+                    </span>
+                    {% endif %}
+                    {% if prop_dict.neighbourhood_cleansed %}
+                    <span class="px-2 py-1 rounded-full bg-gray-100 text-gray-600">
+                        {{ prop_dict.neighbourhood_cleansed }}
+                    </span>
+                    {% endif %}
+                    {% if prop_dict.zip %}
+                    <span class="px-2 py-1 rounded-full bg-gray-100 text-gray-600">
+                        {{ prop_dict.zip }}
+                    </span>
+                    {% endif %}
+                </div>
+
+                <div class="mt-3">
+                    <a href="{{ maps_url }}" target="_blank"
+                        class="inline-flex items-center px-3 py-1.5 rounded-lg border border-gray-300 hover:bg-gray-50">
+                        Open in Maps
+                    </a>
+                </div>
+            </div>
+
+            <!-- Key Predictions -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
+                <div class="bg-white rounded-2xl shadow p-6 text-center">
+                    <h2 class="text-gray-500 uppercase text-sm font-medium">Predicted Price / Night</h2>
+                    <p class="text-3xl font-bold text-blue-600 mt-2">{{ price_pred }}</p>
+                </div>
+                <div class="bg-white rounded-2xl shadow p-6 text-center">
+                    <h2 class="text-gray-500 uppercase text-sm font-medium">Predicted Occupancy</h2>
+                    <p class="text-3xl font-bold text-green-600 mt-2">{{ occ_pred }}</p>
+                </div>
+                <div class="bg-white rounded-2xl shadow p-6 text-center">
+                    <h2 class="text-gray-500 uppercase text-sm font-medium">Predicted Annual Revenue</h2>
+                    <p class="text-3xl font-bold text-purple-600 mt-2">{{ rev_pred }}</p>
+                </div>
+            </div>
+
+            <!-- Property Details -->
+            <div class="bg-white rounded-2xl shadow p-8">
+                <h2 class="text-xl font-semibold mb-4 border-b pb-2">Property Details</h2>
+
+                <dl class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-4 text-sm">
+                    {% for key, value in prop_dict.items() %}
+                    {% if key not in ['price_pred', 'occ_pred', 'rev_pred'] %}
+                    <div class="flex justify-between border-b border-gray-100 py-1">
+                        <dt class="font-medium text-gray-600">{{ key | replace("_", " ") | title }}</dt>
+                        <dd class="text-gray-900">
+                            {% if value is none %}
+                            <span class="text-gray-400 italic">N/A</span>
+                            {% else %}
+                            {{ value }}
+                            {% endif %}
+                        </dd>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                </dl>
+            </div>
+        </div>
+    </body>
+</html>

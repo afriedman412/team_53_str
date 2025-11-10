@@ -1,0 +1,91 @@
+# -- custom --
+testo.py
+sample.json
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+.eggs/
+dist/
+build/
+pip-wheel-metadata/
+
+# --- Virtual environments ---
+.venv/
+venv/
+env/
+ENV/
+
+# --- Env / secrets (keep .env.example) ---
+.env
+.env.*
+!.env.example
+
+# --- Logs ---
+*.log
+uvicorn*.log
+
+# --- Tests / coverage ---
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+pytest_cache/
+.pytest_cache/
+.cache/
+
+# --- Type checkers / linters ---
+.mypy_cache/
+.pytype/
+.pyre/
+
+# --- Jupyter ---
+.ipynb_checkpoints
+*.ipynb
+
+# --- Data & model artifacts (keep placeholders/docs) ---
+data/
+!data/.gitkeep
+!data/README.md
+models/
+!models/.gitkeep
+!models/README.md
+
+# --- OS cruft ---
+.DS_Store
+Thumbs.db
+
+# --- Editors / IDEs ---
+.vscode/
+.idea/
+*.code-workspace
+
+# --- Node / frontend (if used) ---
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-lock.yaml
+.pnpm-debug.log*
+# Common bundler outputs
+frontend/dist/
+frontend/build/
+dist/
+build/
+
+# --- Coverage tools / reports ---
+coverage.xml
+*.lcov
+
+# --- Misc caches ---
+**/.ruff_cache/
+.sourcery/
+
+# --- Local tooling ---
+.envrc
+.direnv/

@@ -1,0 +1,126 @@
+{
+    "status": {
+        "version": "1.0.0",
+        "code": 0,
+        "msg": "SuccessWithResult",
+        "total": 1,
+        "page": 1,
+        "pagesize": 10,
+        "responseDateTime": "2025-11-09T01:30:44.976Z",
+        "transactionID": "9a45b7c0fdb19f512baf93ccb8f764d8",
+        "attomId": 175071127
+    },
+    "property": [
+        {
+            "identifier": {
+                "Id": 175071127,
+                "fips": "17031",
+                "apn": "13-35-236-002",
+                "attomId": 175071127
+            },
+            "lot": {
+                "lotnum": "28",
+                "lotsize1": 0.0717401,
+                "lotsize2": 3125,
+                "pooltype": "NO POOL"
+            },
+            "area": {
+                "blockNum": "12",
+                "loctype": "VIEW - NONE",
+                "countrysecsubd": "Cook",
+                "countyuse1": "2-11 ",
+                "muncode": "CO",
+                "munname": "COOK",
+                "srvyRange": "13E",
+                "srvySection": "35",
+                "srvyTownship": "40N",
+                "subdname": "OVITTS RESUB OF BLK12 OF SHIPMAN BILL",
+                "taxcodearea": "71163"
+            },
+            "address": {
+                "country": "US",
+                "countrySubd": "IL",
+                "line1": "2025 N SAWYER AVE # 1",
+                "line2": "CHICAGO, IL 60647",
+                "locality": "CHICAGO",
+                "matchCode": "ExaStr",
+                "oneLine": "2025 N SAWYER AVE # 1, CHICAGO, IL 60647",
+                "postal1": "60647",
+                "postal2": "3707",
+                "postal3": "C068"
+            },
+            "location": {
+                "accuracy": "Rooftop",
+                "latitude": "41.918169",
+                "longitude": "-87.708605",
+                "distance": 0.0,
+                "geoid": "CO17031, CS1714000, DB1709930, ND0000028598, ND0000565639, PL1714000, SB0000084001, SB0000145687, ZI60647",
+                "geoIdV4": {
+                    "CO": "f60cf773814f0650b074a7b27e7c4e24",
+                    "CS": "107990e6e0229a8ccfa65c6ca2a6440a",
+                    "DB": "d2babda30e614ff058235ca544fd18ec",
+                    "N1": "6966c4a21b804b5192617b1943ed0d8e",
+                    "N2": "e5e81511277a230f9abd70e8745bf564",
+                    "PL": "643446d3873e7c0361f2d5348bf66a51",
+                    "SB": "ab925dd593229d59999236b1aa39748b, a3661ab6a88eaf4abda104a26a4df505",
+                    "ZI": "2bbb28aacc05ba28df40e79524df7863"
+                }
+            },
+            "summary": {
+                "absenteeInd": "OWNER OCCUPIED",
+                "propclass": "Apartment",
+                "propsubtype": "Residential",
+                "proptype": "APARTMENT",
+                "propertyType": "APARTMENTS (GENERIC)",
+                "yearbuilt": 1890,
+                "propLandUse": "APARTMENT",
+                "propIndicator": "22",
+                "legal1": "(OVITTS) RESUB OF BLK12 OF SHIPMAN BILL & MERRILLS SU B OF EH NE SEC 35-40-13"
+            },
+            "utilities": {
+                "coolingtype": "CENTRAL"
+            },
+            "building": {
+                "size": {
+                    "bldgsize": 3324,
+                    "grosssizeadjusted": 3324,
+                    "livingsize": 3324,
+                    "sizeInd": "LIVING SQFT",
+                    "universalsize": 3324
+                },
+                "rooms": {
+                    "bathsfull": 3,
+                    "bathstotal": 3.0,
+                    "beds": 6
+                },
+                "interior": {},
+                "construction": {
+                    "condition": "AVERAGE",
+                    "constructiontype": "FRAME",
+                    "frameType": "WOOD",
+                    "roofcover": "SHINGLE                    ",
+                    "wallType": "BRICK/STONE (BRICK AND/OR STONE)"
+                },
+                "parking": {
+                    "garagetype": "Garage, Detached",
+                    "prkgSpaces": "2",
+                    "prkgType": "Garage, Detached"
+                },
+                "summary": {
+                    "archStyle": "TWO FAMILY",
+                    "bldgsNum": 1,
+                    "bldgType": "CONVENTIONAL HOUSE",
+                    "imprType": "HOUSE",
+                    "levels": 2,
+                    "storyDesc": "CONVENTIONAL HOUSE",
+                    "unitsCount": "3",
+                    "view": "VIEW - NONE"
+                }
+            },
+            "vintage": {
+                "lastModified": "2025-02-25",
+                "pubDate": "2025-02-25"
+            }
+        }
+    ]
+}
