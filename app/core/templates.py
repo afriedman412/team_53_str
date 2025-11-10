@@ -1,3 +1,4 @@
+# app/core/templates.py
 from fastapi.templating import Jinja2Templates
 from app.utils import filters
 

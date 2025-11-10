@@ -1,22 +1,12 @@
 [tool.black]
 line-length = 100
-target-version = ["py313"]
+target-version = ["py312"]  # Also, py313 doesn't exist yet - use py312
 
 [tool.ruff]
 line-length = 100
-target-version = "py313"
-extend-select = [
-  "I",      # import sorting
-  "E", "F", # pycodestyle & pyflakes
-  "UP",     # pyupgrade
-]
-extend-ignore = [
-  # let Black handle wrapping details
-  "E501",
-]
-# optional: per-file ignores
-# [tool.ruff.per-file-ignores]
-# "app/models/pipeline_adapter.py" = ["E402"]  # example
+target-version = "py312"
+select = ["E", "F", "I", "UP"]
+ignore = ["E501"]
 
 [tool.isort]  # only needed if you use isort separately
 profile = "black"

@@ -1,4 +1,4 @@
-# app/deps.py
+# app/core/deps.py
 from __future__ import annotations
 from typing import Optional
 from app.core.store import DataStore
