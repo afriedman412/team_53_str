@@ -1,3 +1,10 @@
+substitutions:
+  _AR_REPO: team-53        # check Artifact Registry name
+  _IMAGE_NAME: team-53-api      # your container name
+  _SERVICE_NAME: team-53-api    # your Cloud Run service name
+  _REGION: us-central1          # Cloud Run region
+  _RUNTIME_SA: team-53-run-sa@team-53-str.iam.gserviceaccount.com
+
 steps:
   # Step 0: Download data & models from GCS into /workspace before build
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
