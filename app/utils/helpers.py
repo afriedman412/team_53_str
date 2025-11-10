@@ -1,16 +1,10 @@
 import re
 import math
+from math import radians, sin, cos, sqrt, atan2
 import json
 from urllib.parse import urlparse, unquote
-
-STATE_ABBR = {
-    "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA", "HI", "ID", "IL", "IN", "IA", "KS", "KY",
-    "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND",
-    "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY", "DC",
-}
-UNIT_MARKERS = {"unit", "apt", "apartment",
-                "suite", "ste", "fl", "floor", "ph"}
-DIRECTIONS = {"N", "S", "E", "W", "NE", "NW", "SE", "SW"}
+from app.schemas.property import AddressData
+from app.core.address import STATE_ABBR, UNIT_MARKERS, DIRECTIONS
 
 
 def _clean_unit_tokens(tokens: list[str]) -> list[str]:
@@ -24,7 +18,7 @@ def _clean_unit_tokens(tokens: list[str]) -> list[str]:
     # Find the STATE + ZIP pair from the right
     idx_state = None
     for i in range(len(tokens) - 2, 0, -1):
-        if tokens[i].upper() in STATE_ABBR and re.fullmatch(r"\d{5}(-\d{4})?", tokens[i+1]):
+        if tokens[i].upper() in STATE_ABBR and re.fullmatch(r"\d{5}(-\d{4})?", tokens[i + 1]):
             idx_state = i
             break
     if idx_state is None:
@@ -32,9 +26,9 @@ def _clean_unit_tokens(tokens: list[str]) -> list[str]:
 
     # Assume city is the single token immediately before STATE (works for most Zillow slugs)
     # (If you have lots of multi-token cities, we can extend this later.)
-    city_tokens = tokens[idx_state-1:idx_state]
-    addr_tokens = tokens[:idx_state-1]       # street part
-    state_zip = tokens[idx_state:]          # [STATE, ZIP]
+    city_tokens = tokens[idx_state - 1 : idx_state]
+    addr_tokens = tokens[: idx_state - 1]  # street part
+    state_zip = tokens[idx_state:]  # [STATE, ZIP]
 
     # Now strip trailing unit markers *at the end of the street tokens only*
     def is_short_unit_like(t: str) -> bool:
@@ -70,16 +64,51 @@ def _clean_unit_tokens(tokens: list[str]) -> list[str]:
     return cleaned + city_tokens + state_zip
 
 
-def extract_address_from_url(url: str) -> tuple[str, str] | None:
+def extract_address_from_url(url: str) -> AddressData | None:
     """
-    Extract (address1, address2) suitable for ATTOM API from Zillow/Redfin URLs.
-      address1: "123 N Main St"
-      address2: "City ST 12345"
+    Extract address data suitable for ATTOM API from Zillow/Redfin URLs.
+    Returns dict with keys: street_tokens, city, state, zipcode, address1, address2, address
     """
     url = unquote(url.strip())
     p = urlparse(url)
     host = p.netloc.lower()
     path = p.path.strip("/")
+
+    def nice(tok: str) -> str:
+        """Title-case token, preserving directions and state abbreviations"""
+        u = tok.upper()
+        if u in DIRECTIONS or u in STATE_ABBR or tok.isdigit():
+            return u
+        return tok.capitalize()
+
+    def parse_tokens(tokens: list[str]) -> dict | None:
+        """Parse address tokens into dict if valid format"""
+        tokens = _clean_unit_tokens(tokens)
+
+        # Expect ... City STATE ZIP
+        if (
+            len(tokens) >= 4
+            and tokens[-2].upper() in STATE_ABBR
+            and re.fullmatch(r"\d{5}(-\d{4})?", tokens[-1])
+        ):
+            state = tokens[-2].upper()
+            zipcode = tokens[-1]
+            city = tokens[-3].replace("-", " ").title()
+            street_tokens = tokens[:-3]
+
+            address1 = " ".join(nice(t) for t in street_tokens).strip().replace("  ", " ")
+            address2 = f"{city} {state} {zipcode}"
+
+            return AddressData(
+                street_tokens=street_tokens,
+                city=city,
+                state=state,
+                zipcode=zipcode,
+                address1=address1,
+                address2=address2,
+                address=f"{address1}, {address2}",
+            )
+        return None
 
     # --- Zillow ---
     if "zillow" in host:
@@ -92,64 +121,24 @@ def extract_address_from_url(url: str) -> tuple[str, str] | None:
 
         if address_slug:
             tokens = [t for t in address_slug.split("-") if t]
-            tokens = _clean_unit_tokens(tokens)
-
-            # Expect ... City STATE ZIP
-            if len(tokens) >= 4 and tokens[-2].upper() in STATE_ABBR and re.fullmatch(r"\d{5}(-\d{4})?", tokens[-1]):
-                state = tokens[-2].upper()
-                zipcode = tokens[-1]
-                city = tokens[-3].replace("-", " ").title()
-                street_tokens = tokens[:-3]
-
-                # Title-case words except all-caps abbreviations; keep directions uppercase
-                def nice(tok: str) -> str:
-                    u = tok.upper()
-                    if u in DIRECTIONS or u in STATE_ABBR:
-                        return u
-                    # keep ordinal/number tokens as-is
-                    if tok.isdigit():
-                        return tok
-                    return tok.capitalize()
-
-                address1 = " ".join(nice(t)
-                                    for t in street_tokens).strip().replace("  ", " ")
-                address2 = f"{city} {state} {zipcode}"
-                return address1, address2
+            return parse_tokens(tokens)
 
     # --- Redfin ---
-    if "redfin" in host:
+    elif "redfin" in host:
         parts = path.split("/")
         if len(parts) >= 4:
             state = parts[0].upper()
             city = parts[1].replace("-", " ").title()
             addr_slug = parts[2]
             tokens = [t for t in addr_slug.split("-") if t]
-            # Ensure tail has city/state/zip for consistent handling
-            tokens = _clean_unit_tokens(tokens + city.split() + [state])
-
-            if len(tokens) >= 4 and tokens[-2].upper() in STATE_ABBR and re.fullmatch(r"\d{5}(-\d{4})?", tokens[-1]):
-                state = tokens[-2].upper()
-                zipcode = tokens[-1]
-                city = tokens[-3].replace("-", " ").title()
-                street_tokens = tokens[:-3]
-
-                def nice(tok: str) -> str:
-                    u = tok.upper()
-                    if u in DIRECTIONS or u in STATE_ABBR:
-                        return u
-                    if tok.isdigit():
-                        return tok
-                    return tok.capitalize()
-
-                address1 = " ".join(nice(t)
-                                    for t in street_tokens).strip().replace("  ", " ")
-                address2 = f"{city} {state} {zipcode}"
-                return address1, address2
+            # Append city/state for consistent parsing
+            tokens = tokens + city.split() + [state]
+            return parse_tokens(tokens)
 
     return None
 
 
-def call_attom_property_detail(address1: str, address2: str) -> dict:
+def call_attom_property_detail(address: AddressData) -> dict:
     """
     Calls the ATTOM API /property/detail endpoint to fetch property details for a single address.
     address1 = street line (e.g., "460 W Superior St")
@@ -159,12 +148,9 @@ def call_attom_property_detail(address1: str, address2: str) -> dict:
     headers = {
         "Accept": "application/json",
         # or "APIKey": api_key depending on what your account uses
-        "apikey": "b4906726263a977c18f9886764990331"
+        "apikey": "b4906726263a977c18f9886764990331",
     }
-    params = {
-        "address1": address1,
-        "address2": address2
-    }
+    params = {"address1": address.address1, "address2": address.address2}
     # resp = requests.get(base_url, headers=headers, params=params, timeout=30)
     # resp.raise_for_status()  # will throw for non-2xx responses
     with open("tests/test_data/attomm_output.json", "r") as f:
@@ -195,7 +181,6 @@ def format_property_data(data: dict) -> dict:
         "med_price": "USD",
         "price_pred": "USD",
         "rev_pred": "USD",
-
         # Demographics / counts
         "population": "count",
         "education_bachelors": "count",
@@ -207,11 +192,9 @@ def format_property_data(data: dict) -> dict:
         "labor_force": "count",
         "unemployed": "count",
         "occ_pred": "count",
-
         # Ages / years
         "median_age": "years",
         "median_year_built": "year",
-
         # Time / distance
         "commute_time_mean": "seconds",
         "dist_to_airport_km": "km",
@@ -220,7 +203,6 @@ def format_property_data(data: dict) -> dict:
         "dist_to_university_km": "km",
         "dist_to_bus_km": "km",
         "dist_to_city_center_km": "km",
-
         # Percentages (fractions 0–1)
         "percent_foreign_born": "%",
         "unemployment_rate": "%",
@@ -230,7 +212,6 @@ def format_property_data(data: dict) -> dict:
         "vacancy_rate": "%",
         "poverty_rate": "%",
         "percent_over_65": "%",
-
         # Other metrics
         "gini_index": "index",
     }
@@ -271,3 +252,15 @@ def format_property_data(data: dict) -> dict:
             out[key] = str(value)
 
     return out
+
+
+def haversine(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    """Return distance in kilometers between two lat/lon points."""
+    R = 6371.0  # Earth radius in km
+    dlat = radians(lat2 - lat1)
+    dlon = radians(lon2 - lon1)
+
+    a = sin(dlat / 2) ** 2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon / 2) ** 2
+    c = 2 * atan2(sqrt(a), sqrt(1 - a))
+
+    return R * c

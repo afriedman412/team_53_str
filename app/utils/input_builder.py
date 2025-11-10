@@ -1,70 +1,74 @@
-from pathlib import Path
 import pandas as pd
-from app.utils.distance_calc import calc_distances
+from app.utils.distance_calc import calc_distances, calc_city_center_distance, validate_address_data
 from app.utils.helpers import call_attom_property_detail
-from app.schemas.input import InputData
-
-CENSUS_PATH = Path(__file__).resolve(
-).parents[2] / "data" / "census_data.parquet"
+from app.core.config import DATA_PATHS
+from app.schemas.property import PropertyData, AddressData
 
 
-def build_input(address: str) -> InputData:
+def parse_attom(attom):
     """
-    Build a fully populated InputData instance from a Zillow/Redfin URL.
+    Parses the output of a call to the ATTOM API
+    """
+    prop = attom["property"][0]
+
+    attom_dict = {}
+    attom_dict["building"] = prop.get("building", {})
+    attom_dict["rooms"] = attom_dict["building"].get("rooms", {})
+    attom_dict["utilities"] = prop.get("utilities", {})
+    attom_dict["parking"] = attom_dict["building"].get("parking", {})
+
+    attom_dict["air_conditioning"] = (
+        attom_dict["utilities"].get("coolingtype", "").upper().startswith("CENTRAL")
+    )
+    attom_dict["heating"] = bool(attom_dict["utilities"])
+    attom_dict["free_parking"] = bool(attom_dict["parking"])
+    attom_dict["beds"] = float(attom_dict["rooms"].get("beds", 0) or 0)
+    attom_dict["baths"] = float(attom_dict["rooms"].get("bathstotal", 0) or 0)
+    attom_dict["accommodates"] = max(1.0, attom_dict["beds"] * 2 or 2.0)
+    return attom_dict
+
+
+def assemble_prop_data(address: AddressData) -> PropertyData:
+    """
+    Build a fully populated PropertyData instance from an AddressData object.
     Combines ATTOM, distances, and ZIP-level census data.
     """
 
-    attom = call_attom_property_detail(*address)
-    prop = attom["property"][0]
+    attom_data = call_attom_property_detail(address)
+    attom_dict = parse_attom(attom_data)
 
-    # --- Property-level values ---
-    lat = float(prop["location"]["latitude"])
-    lon = float(prop["location"]["longitude"])
-    zip_code = prop["address"]["postal1"]
-    state = prop["address"]["countrySubd"].lower()
-
-    building = prop.get("building", {})
-    rooms = building.get("rooms", {})
-    utilities = prop.get("utilities", {})
-    parking = building.get("parking", {})
-
-    air_conditioning = utilities.get(
-        "coolingtype", "").upper().startswith("CENTRAL")
-    heating = bool(utilities)
-    free_parking = bool(parking)
-    beds = float(rooms.get("beds", 0) or 0)
-    baths = float(rooms.get("bathstotal", 0) or 0)
-    accommodates = max(1.0, beds * 2 or 2.0)
-
-    # 2️⃣ Distances
-    dists = calc_distances(lat, lon)
-    # if you have this calc elsewhere, insert it
-    dist_to_city_center = float("nan")
+    # get lat and lon if needed
+    if address.latitude is None or address.latitude is None:
+        address = validate_address_data(address)
+    distance_calcs = calc_distances(address.latitude, address.longitude)
+    distance_calcs["dist_to_city_center_km"] = calc_city_center_distance(address)
 
     # 3️⃣ Census data by ZIP
-    census = pd.read_parquet(CENSUS_PATH)
-    row = census.loc[census["zip"].astype(str) == str(zip_code)]
+    census = pd.read_parquet(DATA_PATHS["census"])
+    row = census.loc[census["zip"].astype(str) == str(address.zipcode)]
     census_dict = row.iloc[0].to_dict() if not row.empty else {}
 
     # Helper to get float safely
     def fget(d, key):
-        return float(d.get(key, float("nan")))
+        try:
+            return float(d.get(key, float("nan")))
+        except Exception:
+            return 9675722
 
-    # 4️⃣ Return validated InputData
-    return InputData(
-        neighbourhood_cleansed="unknown",
-        latitude=lat,
-        longitude=lon,
+    return PropertyData(
+        neighbourhood_cleansed="TBD!!!",
+        latitude=address.latitude,
+        longitude=address.longitude,
         room_type="Entire home/apt",
-        accommodates=accommodates,
-        bathrooms=baths,
-        bedrooms=beds,
-        beds=beds,
+        accommodates=attom_dict["accommodates"],
+        bathrooms=attom_dict["baths"],
+        bedrooms=attom_dict["beds"],
+        beds=attom_dict["beds"],
         privacy="entire",
-        state=state,
-        air_conditioning=air_conditioning,
-        heating=heating,
-        free_parking=free_parking,
+        state=address.state,
+        air_conditioning=attom_dict["air_conditioning"],
+        heating=attom_dict["heating"],
+        free_parking=attom_dict["free_parking"],
         gym=False,
         housekeeping=False,
         pool=False,
@@ -76,14 +80,14 @@ def build_input(address: str) -> InputData:
         hot_tub_shared=False,
         hot_tub_private=False,
         paid_parking=False,
-        avg_price=float("nan"),
-        med_price=float("nan"),
-        dist_to_airport_km=fget(dists, "dist_to_airport_km"),
-        dist_to_train_km=fget(dists, "dist_to_train_km"),
-        dist_to_park_km=fget(dists, "dist_to_park_km"),
-        dist_to_university_km=fget(dists, "dist_to_university_km"),
-        dist_to_bus_km=fget(dists, "bus"),
-        dist_to_city_center_km=dist_to_city_center,
+        avg_price=577.59,  # chicago hard-wired
+        med_price=169.0,  # chicago hard-wired
+        dist_to_airport_km=fget(distance_calcs, "dist_to_airport_km"),
+        dist_to_train_km=fget(distance_calcs, "dist_to_train_km"),
+        dist_to_park_km=fget(distance_calcs, "dist_to_park_km"),
+        dist_to_university_km=fget(distance_calcs, "dist_to_university_km"),
+        dist_to_bus_km=fget(distance_calcs, "bus"),
+        dist_to_city_center_km=fget(distance_calcs, "dist_to_city_center_km"),
         median_income=fget(census_dict, "median_income"),
         median_gross_rent=fget(census_dict, "median_gross_rent"),
         population=fget(census_dict, "population"),

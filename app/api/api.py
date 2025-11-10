@@ -1,4 +1,3 @@
-
 from fastapi import APIRouter, HTTPException, Form
 from fastapi.responses import ORJSONResponse
 from app.utils.helpers import extract_address_from_url, format_property_data
@@ -20,11 +19,10 @@ async def api_from_url(url: str = Form(..., description="Zillow or Redfin listin
 
         result = {
             "source_url": url,
-            "address": address,
-            "inputs": formatted_prop_dict,     # raw extracted features
+            "address": address.model_dump(),
+            "inputs": formatted_prop_dict,  # raw extracted features
         }
         return ORJSONResponse(content=result, status_code=200)
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Failed to process URL: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to process URL: {e}")

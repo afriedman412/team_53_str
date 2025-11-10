@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from typing import Optional
 from app.core.store import DataStore
-from app.core.deps import get_store
+from app.core.registry import get_store
 
 
 def predict_from_saved(df_input: pd.DataFrame, store: Optional[DataStore] = None) -> pd.DataFrame:
@@ -20,8 +20,10 @@ def predict_from_saved(df_input: pd.DataFrame, store: Optional[DataStore] = None
 
     rev_pred = pipeline.m_rev.predict(X_eval)
 
-    preds = {"price_pred": price_pred.item(),
-             "occ_pred": occ_pred.item(),
-             "rev_pred": rev_pred.item()}
+    preds = {
+        "price_pred": price_pred.item(),
+        "occ_pred": occ_pred.item(),
+        "rev_pred": rev_pred.item(),
+    }
 
     return preds

@@ -1,27 +1,22 @@
 # app/core/loader.py
 import geopandas as gpd
 import numpy as np
-from geopy.geocoders import Nominatim
 from shapely.strtree import STRtree
-from app.core.config import (
-    DATA_PATHS, GEOCODER_USER_AGENT, GEOCODER_TIMEOUT,
-    GEOCODER_DOMAIN, GEOCODER_SCHEME
-)
+from app.core.config import DATA_PATHS
 from app.core.store import DataStore
 from app.model_api.model_loader import load_model
 
 
 def load_store() -> DataStore:
     # --- OSM features ---
-    gdf = gpd.read_file(DATA_PATHS['osm'])
+    gdf = gpd.read_file(DATA_PATHS["osm"])
     if gdf.crs is None:
         gdf = gdf.set_crs("EPSG:4326", allow_override=True)
-    gdf = gdf[gdf.geometry.notna() & gdf.geometry.is_valid & ~
-              gdf.geometry.is_empty].copy()
+    gdf = gdf[gdf.geometry.notna() & gdf.geometry.is_valid & ~gdf.geometry.is_empty].copy()
     gdf = gdf.to_crs(3857)
 
     # --- ZIPs ---
-    zips = gpd.read_parquet(DATA_PATHS['zips'])
+    zips = gpd.read_parquet(DATA_PATHS["zips"])
     if zips.crs is None:
         zips = zips.set_crs(3857, allow_override=True)
     elif zips.crs.to_epsg() != 3857:
@@ -46,14 +41,6 @@ def load_store() -> DataStore:
     except Exception:
         trees = None
 
-    # Shared Nominatim client
-    geolocator = Nominatim(
-        user_agent=GEOCODER_USER_AGENT,
-        timeout=GEOCODER_TIMEOUT,
-        domain=GEOCODER_DOMAIN,
-        scheme=GEOCODER_SCHEME,
-    )
-
     # --- Split OSM features into categories ---
     def _subset(gdf, keywords):
         """
@@ -61,18 +48,14 @@ def load_store() -> DataStore:
         Works across multiple possible schema columns (e.g. amenity, name, leisure, highway).
         """
         # Pick text-like columns to search
-        text_cols = [
-            c for c in gdf.columns
-            if gdf[c].dtype == object or "str" in str(gdf[c].dtype)
-        ]
+        text_cols = [c for c in gdf.columns if gdf[c].dtype == object or "str" in str(gdf[c].dtype)]
         if not text_cols:
             return gdf.iloc[0:0]  # empty GeoDataFrame
 
         mask = np.zeros(len(gdf), dtype=bool)
         for kw in keywords:
             for col in text_cols:
-                mask |= gdf[col].astype(str).str.contains(
-                    kw, case=False, na=False)
+                mask |= gdf[col].astype(str).str.contains(kw, case=False, na=False)
         return gdf[mask]
 
     airports = _subset(gdf, ["airport", "aerodrome"])
@@ -127,7 +110,6 @@ def load_store() -> DataStore:
         zip_bounds_miny=miny,
         zip_bounds_maxx=maxx,
         zip_bounds_maxy=maxy,
-        geolocator=geolocator,
         meta=meta,
-        pipeline=pipeline
+        pipeline=pipeline,
     )

@@ -4,25 +4,28 @@ from fastapi.responses import HTMLResponse
 from fastapi import FastAPI, Request
 from contextlib import asynccontextmanager
 from app.api import inputs, predict, distances, debug, outputs, api
+from app.core.store import DataStore
+from app.core.registry import set_store
 from app.core.loader import load_store
-from app.core.deps import set_store, get_store
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    try:
-        # if a previous store is still alive in memory, skip
-        get_store()
-        print("🧠 Reusing existing DataStore (skipping reload)")
-    except RuntimeError:
-        print("🚀 App starting up — loading data...")
-        store = load_store()
-        set_store(store)
+    print("🚀 App starting up — loading data...")
+    store = load_store()
+    set_store(store)
+    app.state.store = store
     yield
     print("🧹 App shutting down — cleanup complete.")
 
 
 app = FastAPI(lifespan=lifespan, title="Chicago STR Prediction API")
+
+
+def get_store(request: Request) -> DataStore:
+    return request.app.state.store
+
+
 app.include_router(predict.router)
 app.include_router(distances.router)
 app.include_router(inputs.router)

@@ -89,9 +89,9 @@
                     "universalsize": 3324
                 },
                 "rooms": {
-                    "bathsfull": 3,
-                    "bathstotal": 3.0,
-                    "beds": 6
+                    "bathsfull": 999,
+                    "bathstotal": 999.0,
+                    "beds": 666
                 },
                 "interior": {},
                 "construction": {

@@ -1,5 +1,4 @@
 # app/utils/distance_calc.py
-
 from __future__ import annotations
 from typing import Dict, Any, Tuple, Optional
 
@@ -8,27 +7,25 @@ from shapely.geometry import Point
 from shapely.geometry.base import BaseGeometry
 
 from app.core.store import DataStore
-from app.core.deps import get_store
+from app.core.config import CITY_CENTERS
 from app.utils.zip_lookup import zip_for_latlon
+from app.schemas.property import AddressData
+from app.utils.helpers import haversine
+from app.core.registry import get_store
 
 
-# ---------------------------------------------------------------------------
-#  Geocoding (uses shared Nominatim from store)
-# ---------------------------------------------------------------------------
-
-def geocode_address(address: str, store: Optional[DataStore] = None) -> Tuple[float, float]:
+def geocode_address(address: str | AddressData) -> Tuple[float, float]:
     """
     Convert an address to (lat, lon) using the shared Nominatim client.
     """
-    loc = store.geolocator.geocode(address, exactly_one=True)
+    store = get_store()
+    address_ = str(address).replace(",", "")
+    print("*** YOU ARE GETTING LAT LON FOR THIS:", address_)
+    loc = store.geolocator.geocode(address_, exactly_one=True)
     if not loc:
         raise ValueError(f"Address not found: {address}")
     return (loc.latitude, loc.longitude)
 
-
-# ---------------------------------------------------------------------------
-#  Distance calculator (nearest feature distances)
-# ---------------------------------------------------------------------------
 
 def _iter_feature_sets(store: DataStore):
     """
@@ -38,8 +35,7 @@ def _iter_feature_sets(store: DataStore):
     Otherwise, fall back to a single set named 'all_features' using the global tree.
     """
     meta = store.meta or {}
-    feature_sets: Optional[Dict[str, Dict[str, Any]]
-                           ] = meta.get("feature_sets")
+    feature_sets: Optional[Dict[str, Dict[str, Any]]] = meta.get("feature_sets")
 
     if feature_sets:
         for name, data in feature_sets.items():
@@ -49,8 +45,8 @@ def _iter_feature_sets(store: DataStore):
         yield "all_features", store.feature_index, store.gdf_features.geometry.values
 
 
-def calc_distances(lat: float, lon: float, store: Optional[DataStore] = None) -> Dict[str, float]:
-    store = store or get_store()
+def calc_distances(lat: float, lon: float) -> Dict[str, float]:
+    store = get_store()
     pt_m = gpd.GeoSeries([Point(lon, lat)], crs=4326).to_crs(3857).iloc[0]
 
     dists: Dict[str, float] = {}
@@ -65,12 +61,27 @@ def calc_distances(lat: float, lon: float, store: Optional[DataStore] = None) ->
     return dists
 
 
-# ---------------------------------------------------------------------------
-#  Combined wrapper
-# ---------------------------------------------------------------------------
+def calc_city_center_distance(address: AddressData) -> float:
+    """
+    Hard-coded for Chicago right now
 
-def distances_from_address(address: str, store: Optional[DataStore] = None) -> Dict[str, Any]:
-    store = store or get_store()
-    lat, lon = geocode_address(address, store)
-    zip_code = zip_for_latlon(lat, lon, store)
-    return {"lat": lat, "lon": lon, "zip": zip_code, **calc_distances(lat, lon, store)}
+    Excluded from calc_distances because of input diff
+
+    Will fix later.
+    """
+    c_lat, c_lon = CITY_CENTERS["chicago-il"]
+    cc_distance = haversine(c_lat, c_lon, address.latitude, address.longitude)
+    return cc_distance
+
+
+def validate_address_data(address: AddressData) -> AddressData:
+    """
+    Fills out lat, lon and zip if needed in an AddressData object.
+    """
+    if address.latitude is None or address.longitude is None:
+        address.latitude, address.longitude = geocode_address(address)
+
+    if address.zipcode is None:
+        address.zipcode = zip_for_latlon(address.latitude, address.longitude)
+
+    return address

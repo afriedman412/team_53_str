@@ -17,16 +17,20 @@ DATA_DIR = ROOT_DIR / "data"
 DATA_PATHS = {
     "osm": DATA_DIR / "osm" / "chicago_features.gpkg",
     "zips": DATA_DIR / "geo" / "zcta_3857.parquet",
+    "census": DATA_DIR / "census_data.parquet",
 }
 
 PIPELINE_PATH = ROOT_DIR / "models" / "pipeline.joblib"
 
 # Geocoder settings
 # consider adding contact info per Nominatim policy
-GEOCODER_USER_AGENT = "capstone_demo_geo"
-GEOCODER_TIMEOUT = 5  # seconds
+GEOCODER_USER_AGENT = "afriedman412@gmail.com"
+GEOCODER_TIMEOUT = 10  # seconds
 GEOCODER_DOMAIN = "nominatim.openstreetmap.org"
 GEOCODER_SCHEME = "https"
+GEOCODER_MIN_INTERVAL_SEC = 1.1
+GEOCODER_CACHE_TTL_SEC = 24 * 60 * 60
+GEOCODER_CACHE_SIZE = 10000
 
 
 # inferred city center data
