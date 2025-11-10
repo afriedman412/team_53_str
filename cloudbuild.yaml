@@ -20,3 +20,6 @@ steps:
 
 images:
   - 'us-docker.pkg.dev/$PROJECT_ID/$_AR_REPO/$_IMAGE_NAME'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
