@@ -39,7 +39,7 @@ steps:
       [
         'build',
         '-t',
-        'us-docker.pkg.dev/$PROJECT_ID/$_AR_REPO/$_IMAGE_NAME',
+        'us-central1-docker.pkg.dev/$PROJECT_ID/$_AR_REPO/$_IMAGE_NAME',
         '.'
       ]
 
@@ -53,7 +53,7 @@ steps:
         'deploy',
         '$_SERVICE_NAME',
         '--image',
-        'us-docker.pkg.dev/$PROJECT_ID/$_AR_REPO/$_IMAGE_NAME',
+        'us-central1-docker.pkg.dev/$PROJECT_ID/$_AR_REPO/$_IMAGE_NAME',
         '--region',
         '$_REGION',
         '--allow-unauthenticated',
@@ -62,7 +62,7 @@ steps:
       ]
 
 images:
-  - 'us-docker.pkg.dev/$PROJECT_ID/$_AR_REPO/$_IMAGE_NAME'
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/$_AR_REPO/$_IMAGE_NAME'
 
 options:
   logging: CLOUD_LOGGING_ONLY
