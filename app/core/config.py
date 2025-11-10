@@ -24,8 +24,8 @@ PIPELINE_PATH = ROOT_DIR / "models" / "pipeline.joblib"
 
 # Geocoder settings
 # consider adding contact info per Nominatim policy
-GEOCODER_USER_AGENT = "capstone_demo_geo"
-GEOCODER_TIMEOUT = 5  # seconds
+GEOCODER_USER_AGENT = "afriedman412@gmail.com"
+GEOCODER_TIMEOUT = 10  # seconds
 GEOCODER_DOMAIN = "nominatim.openstreetmap.org"
 GEOCODER_SCHEME = "https"
 GEOCODER_MIN_INTERVAL_SEC = 1.1

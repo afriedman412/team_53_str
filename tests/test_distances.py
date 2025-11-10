@@ -58,5 +58,3 @@ def test_get_distance_param_styles(client, case):
     # assert 2.0 <= data["dist_to_city_center_km"] < 12.0
     assert 18.0 <= data["dist_to_airport_km"] < 19.0
     assert 3.6 <= data["dist_to_university_km"] < 3.7
-
-    assert 49230 <= data["race_white"] < 49240

@@ -19,7 +19,9 @@ def geocode_address(address: str | AddressData) -> Tuple[float, float]:
     Convert an address to (lat, lon) using the shared Nominatim client.
     """
     store = get_store()
-    loc = store.geolocator.geocode(address, exactly_one=True)
+    address_ = str(address).replace(",", "")
+    print("*** YOU ARE GETTING LAT LON FOR THIS:", address_)
+    loc = store.geolocator.geocode(address_, exactly_one=True)
     if not loc:
         raise ValueError(f"Address not found: {address}")
     return (loc.latitude, loc.longitude)
@@ -76,9 +78,8 @@ def validate_address_data(address: AddressData) -> AddressData:
     """
     Fills out lat, lon and zip if needed in an AddressData object.
     """
-    store = get_store()
     if address.latitude is None or address.longitude is None:
-        address.latitude, address.longitude = geocode_address(address, store)
+        address.latitude, address.longitude = geocode_address(address)
 
     if address.zipcode is None:
         address.zipcode = zip_for_latlon(address.latitude, address.longitude)

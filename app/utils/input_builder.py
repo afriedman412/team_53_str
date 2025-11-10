@@ -3,7 +3,6 @@ from app.utils.distance_calc import calc_distances, calc_city_center_distance, v
 from app.utils.helpers import call_attom_property_detail
 from app.core.config import DATA_PATHS
 from app.schemas.property import PropertyData, AddressData
-from app.core.store import DataStore
 
 
 def parse_attom(attom):
@@ -29,7 +28,7 @@ def parse_attom(attom):
     return attom_dict
 
 
-def assemble_prop_data(address: AddressData, store: DataStore) -> PropertyData:
+def assemble_prop_data(address: AddressData) -> PropertyData:
     """
     Build a fully populated PropertyData instance from an AddressData object.
     Combines ATTOM, distances, and ZIP-level census data.

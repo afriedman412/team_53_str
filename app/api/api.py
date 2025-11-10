@@ -19,7 +19,7 @@ async def api_from_url(url: str = Form(..., description="Zillow or Redfin listin
 
         result = {
             "source_url": url,
-            "address": address,
+            "address": address.model_dump(),
             "inputs": formatted_prop_dict,  # raw extracted features
         }
         return ORJSONResponse(content=result, status_code=200)
