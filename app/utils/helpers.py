@@ -1,7 +1,6 @@
 import re
 import math
 from math import radians, sin, cos, sqrt, atan2
-import json
 from urllib.parse import urlparse, unquote
 from app.schemas.property import AddressData
 from app.core.address import STATE_ABBR, UNIT_MARKERS, DIRECTIONS
@@ -150,26 +149,6 @@ def extract_address_from_url(url: str) -> AddressData | None:
     return None
 
 
-def call_attom_property_detail(address: AddressData) -> dict:
-    """
-    Calls the ATTOM API /property/detail endpoint to fetch property details for a single address.
-    address1 = street line (e.g., "460 W Superior St")
-    address2 = city/state/zip (e.g., "Chicago IL 60654")
-    """
-    base_url = "https://api.gateway.attomdata.com/propertyapi/v1.0.0/property/detail"
-    headers = {
-        "Accept": "application/json",
-        # or "APIKey": api_key depending on what your account uses
-        "apikey": "b4906726263a977c18f9886764990331",
-    }
-    params = {"address1": address.address1, "address2": address.address2}
-    # resp = requests.get(base_url, headers=headers, params=params, timeout=30)
-    # resp.raise_for_status()  # will throw for non-2xx responses
-    with open("tests/test_data/attomm_output.json", "r") as f:
-        fake_data = json.load(f)
-    return fake_data
-
-
 def sanitize_for_json(obj):
     if isinstance(obj, dict):
         return {k: sanitize_for_json(v) for k, v in obj.items()}
@@ -276,3 +255,38 @@ def haversine(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     c = 2 * atan2(sqrt(a), sqrt(1 - a))
 
     return R * c
+
+
+COL_FIXES = columns = dict(
+    zip(
+        [
+            "room_type_hotel_room",
+            "room_type_private_room",
+            "room_type_shared_room",
+            "privacy_room_in",
+        ],
+        [
+            "room_type_Hotel room",
+            "room_type_Private room",
+            "room_type_Shared room",
+            "privacy_room in",
+        ],
+    )
+)
+
+
+def short_term_scenario_cleaning(df):
+    df["state"] = "il"
+    # df["zipcode"] = 60654.0
+    df["city"] = "chicago-il"
+    df["avg_price"] = 577.59
+    df["med_price"] = 169.0
+    if "dist_to_bus_dm" not in df:
+        df["dist_to_bus_km"] = 5
+
+    df.rename(
+        columns=COL_FIXES,
+        inplace=True,
+    )
+    df.index = df.index.astype(int)
+    return df

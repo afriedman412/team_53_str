@@ -77,7 +77,7 @@ def build_scenario_location_base(address: AddressData) -> dict:
     }
 
     # distances
-    base.update(get_distance_features(address.latitude, address.longitude))
+    base.update(get_distance_features(address))
 
     # census
     base.update(get_census_features(address.zipcode))

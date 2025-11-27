@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 import geopandas as gpd
 import numpy as np
 from shapely.strtree import STRtree
-from typing import Optional, Dict, Any, Tuple
+from typing import Optional, Dict, Any
 from cachetools import TTLCache
 from geopy.geocoders import Nominatim
 from geopy.exc import GeocoderTimedOut, GeocoderUnavailable

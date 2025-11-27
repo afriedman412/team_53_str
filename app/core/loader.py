@@ -2,9 +2,15 @@
 import geopandas as gpd
 import numpy as np
 from shapely.strtree import STRtree
-from app.core.config import DATA_PATHS
+from app.core.config import DATA_PATHS, POPS_PATH
 from app.core.store import DataStore
-from app.model_api.model_loader import load_model
+
+from app.model.assembler import Pops
+
+
+def load_model():
+    pops = Pops.load(POPS_PATH)
+    return pops
 
 
 def load_store() -> DataStore:

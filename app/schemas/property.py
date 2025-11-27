@@ -26,7 +26,7 @@ class AddressData(BaseModel):
         return f"AddressData({self.address!r})"
 
 
-class ScenarioBase(BaseModel):
+class PropertyGeographic(BaseModel):
     latitude: float
     longitude: float
     state: str
@@ -69,7 +69,7 @@ class ScenarioBase(BaseModel):
     model_config = {"extra": "ignore"}  # base is strict but ignore extra fields
 
 
-class ScenarioControls(BaseModel):
+class PropertyControls(BaseModel):
     bedrooms: int
     beds: int
     accommodates: int
@@ -107,5 +107,5 @@ class ScenarioControls(BaseModel):
     model_config = {"extra": "ignore"}
 
 
-class ScenarioData(ScenarioBase, ScenarioControls):
+class PropertyData(PropertyGeographic, PropertyControls):
     model_config = {"extra": "ignore"}

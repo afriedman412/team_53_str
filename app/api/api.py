@@ -1,7 +1,14 @@
+import pandas as pd
 from fastapi import APIRouter, HTTPException, Form
 from fastapi.responses import ORJSONResponse
-from app.utils.helpers import extract_address_from_url, format_property_data
-from app.utils.processing import process_address
+from app.utils.helpers import (
+    extract_address_from_url,
+    format_property_data,
+    short_term_scenario_cleaning,
+)
+from app.utils.input_builder import build_scenario_location_base
+from app.utils.scenario_generator import generate_scenarios_from_address
+from app.core.registry import get_store
 
 router = APIRouter(prefix="/api")
 
@@ -14,7 +21,7 @@ async def api_from_url(url: str = Form(..., description="Zillow or Redfin listin
     """
     try:
         address = extract_address_from_url(url)
-        prop_dict = process_address(address)
+        prop_dict = build_scenario_location_base(address)
         formatted_prop_dict = format_property_data(prop_dict)
 
         result = {
@@ -23,6 +30,29 @@ async def api_from_url(url: str = Form(..., description="Zillow or Redfin listin
             "inputs": formatted_prop_dict,  # raw extracted features
         }
         return ORJSONResponse(content=result, status_code=200)
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to process URL: {e}")
+
+
+@router.post("/scenario_from_url", response_class=ORJSONResponse)
+async def scenario_from_url(url: str = Form(..., description="Zillow or Redfin listing URL")):
+    """
+    Same as above but a whole scenario
+    """
+    try:
+        address = extract_address_from_url(url)
+        scenarios = generate_scenarios_from_address(address)
+        scenarios = short_term_scenario_cleaning(scenarios)
+
+        store = get_store()
+        preds = store.pipeline.predict(scenarios)
+        print(preds.shape)
+        df = pd.concat([scenarios, preds], axis=1)
+
+        scenarios_json = df.to_json()
+
+        return ORJSONResponse(content=scenarios_json, status_code=200)
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to process URL: {e}")

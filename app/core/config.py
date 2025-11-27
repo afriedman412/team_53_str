@@ -22,6 +22,17 @@ DATA_PATHS = {
 
 PIPELINE_PATH = ROOT_DIR / "models" / "pipeline.joblib"
 
+POPS_PATH = "/Users/user/Documents/code/team_53/team_53_app/models/pops_122625"
+
+# for loading
+PIPELINE_PATHS = {
+    "properties": DATA_DIR / "df_clean_city_subset_111725.csv",
+    "embedder": PIPELINE_PATH / "embedder.pkl",
+    "embeddings": PIPELINE_PATH / "embeddings.pkl",
+    "assembler": PIPELINE_PATH / "assembler.pkl",
+}
+
+
 # Geocoder settings
 # consider adding contact info per Nominatim policy
 GEOCODER_USER_AGENT = "afriedman412@gmail.com"
@@ -32,6 +43,16 @@ GEOCODER_MIN_INTERVAL_SEC = 1.1
 GEOCODER_CACHE_TTL_SEC = 24 * 60 * 60
 GEOCODER_CACHE_SIZE = 10000
 
+CITY_SUBSET = [
+    "boston-ma",
+    "washington-dc",
+    "denver-co",
+    "columbus-oh",
+    "twin-cities-mn",
+    "chicago-il",
+    "austin-tx",
+    "nashville-tn",
+]
 
 # inferred city center data
 CITY_CENTERS = {
