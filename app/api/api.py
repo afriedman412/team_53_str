@@ -4,10 +4,9 @@ from fastapi.responses import ORJSONResponse
 from app.utils.helpers import (
     extract_address_from_url,
     format_property_data,
-    short_term_scenario_cleaning,
 )
 from app.utils.input_builder import build_scenario_location_base
-from app.utils.scenario_generator import generate_scenarios_from_address
+from app.utils.scenario_generator import generate_scenarios_guided_by_shap
 from app.core.registry import get_store
 
 router = APIRouter(prefix="/api")
@@ -40,19 +39,19 @@ async def scenario_from_url(url: str = Form(..., description="Zillow or Redfin l
     """
     Same as above but a whole scenario
     """
-    try:
-        address = extract_address_from_url(url)
-        scenarios = generate_scenarios_from_address(address)
-        scenarios = short_term_scenario_cleaning(scenarios)
+    # try:
+    address = extract_address_from_url(url)
 
-        store = get_store()
-        preds = store.pipeline.predict(scenarios)
-        print(preds.shape)
-        df = pd.concat([scenarios, preds], axis=1)
+    informed_scenarios_df = generate_scenarios_guided_by_shap(address)
 
-        scenarios_json = df.to_json()
+    store = get_store()
+    preds = store.pipeline.predict(informed_scenarios_df)
+    print(preds.shape)
+    df = pd.concat([informed_scenarios_df, preds], axis=1)
 
-        return ORJSONResponse(content=scenarios_json, status_code=200)
+    scenarios_json = df.to_json()
 
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to process URL: {e}")
+    return ORJSONResponse(content=scenarios_json, status_code=200)
+
+    # except Exception as e:
+    #     raise HTTPException(status_code=500, detail=f"Failed to process URL: {e}")

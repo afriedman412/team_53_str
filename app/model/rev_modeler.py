@@ -17,6 +17,8 @@ class RevenueModeler:
         if params is None:
             self.params = MODEL_DATA["revenue_corr"]["params"]
 
+        self.X_corr_cols = None
+
     # -------------------------------------------------------------
     def prepare_training_data(self, df, price_model, occ_model):
         """

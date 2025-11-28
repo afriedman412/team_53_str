@@ -16,13 +16,12 @@ DATA_DIR = ROOT_DIR / "data"
 
 DATA_PATHS = {
     "osm": DATA_DIR / "osm" / "chicago_features.gpkg",
-    "zips": DATA_DIR / "geo" / "zcta_3857.parquet",
     "census": DATA_DIR / "census_data.parquet",
 }
 
 PIPELINE_PATH = ROOT_DIR / "models" / "pipeline.joblib"
 
-POPS_PATH = ROOT_DIR / "models" / "pops_122725"
+POPS_PATH = ROOT_DIR / "models" / "pops_122725_better"
 
 # for loading
 PIPELINE_PATHS = {

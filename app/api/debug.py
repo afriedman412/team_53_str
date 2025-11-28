@@ -14,7 +14,6 @@ def store_info():
     )
     return {
         "gdf_features_rows": len(store.gdf_features),
-        "zips_rows": len(store.zips),
         "trees_rows": 0 if store.trees is None else len(store.trees),
         "meta_keys": list(store.meta.keys()),
         "feature_index_type": "STRtree",

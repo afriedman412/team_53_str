@@ -1,13 +1,14 @@
 # app/core/loader.py
 import geopandas as gpd
 import numpy as np
+from functools import lru_cache
 from shapely.strtree import STRtree
 from app.core.config import DATA_PATHS, POPS_PATH
 from app.core.store import DataStore
-
 from app.model.assembler import Pops
 
 
+@lru_cache
 def load_model():
     pops = Pops.load(POPS_PATH)
     return pops
@@ -20,22 +21,6 @@ def load_store() -> DataStore:
         gdf = gdf.set_crs("EPSG:4326", allow_override=True)
     gdf = gdf[gdf.geometry.notna() & gdf.geometry.is_valid & ~gdf.geometry.is_empty].copy()
     gdf = gdf.to_crs(3857)
-
-    # --- ZIPs ---
-    zips = gpd.read_parquet(DATA_PATHS["zips"])
-    if zips.crs is None:
-        zips = zips.set_crs(3857, allow_override=True)
-    elif zips.crs.to_epsg() != 3857:
-        zips = zips.to_crs(3857)
-
-    zips = zips[["zcta", "geometry"]].copy()
-
-    # Precompute bounds arrays for quick bbox masking
-    bounds = zips.geometry.bounds
-    minx = bounds["minx"].to_numpy()
-    miny = bounds["miny"].to_numpy()
-    maxx = bounds["maxx"].to_numpy()
-    maxy = bounds["maxy"].to_numpy()
 
     # --- Optional: trees layer (if present) ---
     try:
@@ -100,7 +85,6 @@ def load_store() -> DataStore:
 
     meta = {
         "n_features": len(gdf),
-        "n_zips": len(zips),
         "has_trees": trees is not None,
         "feature_sets": feature_sets,
     }
@@ -109,13 +93,8 @@ def load_store() -> DataStore:
 
     return DataStore(
         gdf_features=gdf,
-        zips=zips,
         trees=trees,
         feature_index=STRtree(gdf.geometry.values),
-        zip_bounds_minx=minx,
-        zip_bounds_miny=miny,
-        zip_bounds_maxx=maxx,
-        zip_bounds_maxy=maxy,
         meta=meta,
         pipeline=pipeline,
     )

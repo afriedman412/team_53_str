@@ -7,7 +7,8 @@ from shapely.geometry import Point
 from shapely.geometry.base import BaseGeometry
 from app.core.store import DataStore
 from app.core.config import CITY_CENTERS
-from app.utils.zip_lookup import zip_for_latlon
+
+# from app.utils.zip_lookup import zip_for_latlon
 from app.schemas.property import AddressData
 from app.utils.helpers import haversine
 from app.core.registry import get_store
@@ -78,12 +79,9 @@ def calc_city_center_distance(address: AddressData) -> float:
 
 def validate_address_data(address: AddressData) -> AddressData:
     """
-    Fills out lat, lon and zip if needed in an AddressData object.
+    Fills out lat, lon if needed in an AddressData object.
     """
     if address.latitude is None or address.longitude is None:
         address.latitude, address.longitude = geocode_address(address)
-
-    if address.zipcode is None:
-        address.zipcode = zip_for_latlon(address.latitude, address.longitude)
 
     return address

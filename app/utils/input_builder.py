@@ -1,7 +1,8 @@
 import pandas as pd
+import json
 from app.utils.distance_calc import calc_distances, calc_city_center_distance, validate_address_data
 from app.core.config import DATA_PATHS
-from app.utils.helpers import build_fget
+from app.utils.helpers import build_fget, extract_address_from_url
 from app.schemas.property import PropertyGeographic, AddressData
 
 
@@ -88,3 +89,48 @@ def build_scenario_location_base(address: AddressData) -> dict:
 def build_scenario_base_from_address(address: AddressData) -> PropertyGeographic:
     base_dict = build_scenario_location_base(address)
     return PropertyGeographic(**base_dict)
+
+
+def janky_url_loader(url, json_path):
+    with open(json_path) as f:
+        jjj = f.read()
+        j = json.loads(jjj)
+
+    address = extract_address_from_url(url)
+
+    for l in ["latitude", "longitude"]:
+        if address.__getattribute__(l) is None:
+            address.__setattr__(l, j["address"][l])
+
+    distances = {
+        k: float(j["inputs"][k].split()[0])
+        for k in [
+            "dist_to_airport_km",
+            "dist_to_train_km",
+            "dist_to_park_km",
+            "dist_to_university_km",
+            "dist_to_bus_km",
+            "dist_to_city_center_km",
+        ]
+    }
+
+    distances["dist_to_bus_km"] = 5
+
+    base = {
+        "latitude": address.latitude,
+        "longitude": address.longitude,
+        "state": address.state,
+        "zipcode": address.zipcode,
+    }
+
+    base.update(distances)
+    base.update(get_census_features(address.zipcode))
+    return base
+
+
+def validate_scenario_df(scenario_df, city="chicago-il"):
+    scenario_df["city"] = "chicago-il"
+    scenario_df["slice"] = "chicago-il"
+    scenario_df["avg_price"] = 577.59
+    scenario_df["med_price"] = 169.0
+    return scenario_df

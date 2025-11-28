@@ -15,8 +15,9 @@ import pandas as pd
 from typing import List, Dict, Any
 from app.core.registry import get_store
 from app.schemas.property import AddressData, PropertyControls
-from app.utils.input_builder import build_scenario_base_from_address
+from app.utils.input_builder import build_scenario_base_from_address, validate_scenario_df
 from app.core.scenario_config import SIZE_PROTOTYPES, AMENITY_BUNDLES, CONTROLLABLE_COLS
+from app.model.helpers import get_modeling_columns
 
 # ============================================================
 # CONTROLLABLE FEATURE DOMAIN (SCENARIO SPACE)
@@ -52,6 +53,38 @@ SCENARIO_SPACE = {
     "room_type_private_room": [0, 1],
     "room_type_shared_room": [0, 1],
     "room_type_hotel_room": [0, 1],
+}
+
+SCENARIO_DEFAULTS = {
+    # Independent structural sliders
+    "bedrooms": 1,
+    "beds": 1,
+    "accommodates": 2,
+    "bathrooms": 1.5,
+    # Amenities
+    "air_conditioning": 1,
+    "heating": 1,
+    "free_parking": 1,
+    "paid_parking": 0,
+    "gym": 0,
+    "housekeeping": 0,
+    "pool": 0,
+    "pool_private": 0,
+    "pool_shared": 0,
+    "pool_indoor": 0,
+    "pool_outdoor": 0,
+    "hot_tub": 0,
+    "hot_tub_private": 0,
+    "hot_tub_shared": 0,
+    # Privacy (mutually exclusive)
+    "privacy_private": 1,
+    "privacy_room_in": 0,
+    "privacy_shared": 0,
+    # Room type (mutually exclusive)
+    "room_type_entire": 1,
+    "room_type_private_room": 0,
+    "room_type_shared_room": 0,
+    "room_type_hotel_room": 0,
 }
 
 
@@ -157,13 +190,7 @@ def build_prototype_grid_from_address(address: AddressData) -> pd.DataFrame:
     base = build_scenario_base_from_address(address)
     base_dict = base.model_dump()
 
-    #
-    # NEW: inject all controllable columns with safe defaults
-    #
-    for col in SCENARIO_SPACE:
-        if col not in base_dict:
-            # use first entry as “default” (usually 0)
-            base_dict[col] = SCENARIO_SPACE[col][0]
+    base_dict.update(SCENARIO_DEFAULTS)
 
     rows: List[Dict[str, Any]] = []
 
@@ -181,20 +208,20 @@ def build_prototype_grid_from_address(address: AddressData) -> pd.DataFrame:
 
             rows.append(row_clean)
 
-    df = pd.DataFrame(rows)
+    prototype_scenario_df = pd.DataFrame(rows)
 
-    if df.empty:
+    if prototype_scenario_df.empty:
         raise ValueError("No valid prototypes generated.")
 
     # df = short_term_scenario_cleaning(df)
-    df["city"] = "chicago-il"
-    df["avg_price"] = 577.59
-    df["med_price"] = 169.0
+    prototype_scenario_df = validate_scenario_df(prototype_scenario_df)
 
     # 4. Inject embeddings EXACTLY as Pops does before prediction
-    df_emb = pops.embedder.transform(df)
+    df_emb = pops.embedder.transform(prototype_scenario_df)
 
-    return df_emb
+    prototype_scenario_df_w_embs = pd.concat([prototype_scenario_df, df_emb])
+
+    return prototype_scenario_df_w_embs
 
 
 def compute_location_shap_top_levers(
@@ -213,15 +240,14 @@ def compute_location_shap_top_levers(
     pops = store.pipeline
 
     # Make sure we only feed modeling columns to the model:
-    X = df_proto[pops.modeling_cols]
+    modeling_cols = get_modeling_columns(df_proto)
+    X = df_proto[modeling_cols]
 
-    exp = pops.shap_rev_explainer(X)  # shap.Explanation
+    rev_explained = pops.shap_rev(X)  # shap.Explanation
 
     # exp.values: (n_samples, n_features)
-    vals = np.abs(exp.values).mean(axis=0)  # mean |SHAP| per feature
-    feature_names = np.array(exp.feature_names)
-
-    importance = pd.Series(vals, index=feature_names)
+    vals = np.abs(rev_explained.values).mean(axis=0)  # mean |SHAP| per feature
+    importance = pd.Series(vals, index=pops.rev_model.X_corr_cols)
 
     # restrict to controllables that actually exist in this model
     controllables_present = [c for c in CONTROLLABLE_COLS if c in importance.index]
@@ -261,6 +287,7 @@ def generate_scenarios_guided_by_shap(
 
     for values in itertools.product(*control_values):
         row = base_dict.copy()
+        row.update(SCENARIO_DEFAULTS)
         for k, v in zip(active_keys, values):
             row[k] = v
 
@@ -278,5 +305,5 @@ def generate_scenarios_guided_by_shap(
     if not scenarios:
         raise ValueError("No valid SHAP-guided scenarios generated for this address.")
 
-    df_scen = pd.DataFrame(scenarios)
-    return df_scen
+    df_shap_informed_scenarios = pd.DataFrame(scenarios)
+    return df_shap_informed_scenarios

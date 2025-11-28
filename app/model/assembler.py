@@ -86,6 +86,7 @@ class Pops:
 
         print("*** BUILDING SHAP TREES")
         self._build_shap_trees()
+        print("*** DONE TRAINING")
         return
 
     def predict(self, df_input: pd.DataFrame) -> pd.DataFrame:
@@ -148,8 +149,8 @@ class Pops:
         params = MODEL_DATA[params_key]["params"]
         transform = MODEL_DATA[params_key]["transform"]
         target = MODEL_DATA[params_key]["target"]
-        modeling_cols = get_modeling_columns(df)
-        X = df[modeling_cols]
+        self.modeling_cols = get_modeling_columns(df)
+        X = df[self.modeling_cols]
         y = df[target]
 
         model = LightGBMRegressorCV(

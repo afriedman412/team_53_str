@@ -24,13 +24,8 @@ import time
 class DataStore:
     pipeline: Any
     gdf_features: gpd.GeoDataFrame
-    zips: gpd.GeoDataFrame
     trees: Optional[gpd.GeoDataFrame]
     feature_index: STRtree
-    zip_bounds_minx: np.ndarray
-    zip_bounds_miny: np.ndarray
-    zip_bounds_maxx: np.ndarray
-    zip_bounds_maxy: np.ndarray
     meta: Dict[str, Any]
 
     # internal mutable helpers (excluded from equality/repr; OK with frozen dataclass)
