@@ -36,22 +36,5 @@ app.include_router(api.router)
 templates = Jinja2Templates(directory="templates")
 
 
-@app.get("/", response_class=HTMLResponse)
-async def home(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
-
-
-@app.get("/manual", response_class=HTMLResponse)
-async def manual_form(request: Request):
-    return templates.TemplateResponse("manual.html", {"request": request})
-
-
-@app.post("/predict_manual")
-async def predict_manual(request: Request):
-    form = await request.form()
-    # TODO: process features and return result
-    return {"received": dict(form)}
-
-
 if __name__ == "__main__":
     uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)

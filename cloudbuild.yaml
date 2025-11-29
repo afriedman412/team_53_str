@@ -6,31 +6,26 @@ substitutions:
   _RUNTIME_SA: team-53-run-sa@team-53-str.iam.gserviceaccount.com
 
 steps:
-  # Step 0: Download data & models from GCS into /workspace before build
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
     id: "fetch-data"
     entrypoint: bash
     args:
       - -c
       - |
-        echo "📦 Downloading geo and model files from GCS..."
-        mkdir -p data/geo models
-        gsutil -m cp gs://team-53-data/geo/zcta_3857.parquet data/geo/
-        gsutil -m cp gs://team-53-data/models/pipeline.joblib models/
-        gsutil -m cp gs://team-53-data/models/infer_meta.json models/
+        echo "📦 Downloading data and Pops model files from GCS..."
+
+        mkdir -p data
+        mkdir -p app/models
+
+        # Download cleaned data file
+        gsutil -m cp gs://team-53-data/data/df_clean_city_subset_111725.csv data/
+
+        # Download pops_ model folder into app/models/
+        gsutil -m cp -r gs://team-53-data/models/pops_ app/models/
+
         echo "✅ Finished fetching data from GCS."
 
-  # Step 1: Run quick tests (non-blocking)
-  - name: 'python:3.12'
-    id: "run-tests"
-    entrypoint: bash
-    args:
-      - -c
-      - |
-        echo "🧪 Running tests..."
-        pip install -r requirements.txt >/dev/null 2>&1 || true
-        pytest -q || echo "⚠️  Skipping tests (non-blocking)."
-        echo "✅ Test step complete."
+
 
   # Step 2: Build Docker image (includes data + models)
   - name: 'gcr.io/cloud-builders/docker'

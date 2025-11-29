@@ -2,6 +2,7 @@
 testo.py
 sample.json
 scrap/
+data/df_clean_city_subset_111725.csv
 
 # --- Python ---
 __pycache__/
@@ -90,3 +91,5 @@ coverage.xml
 # --- Local tooling ---
 .envrc
 .direnv/
+
+

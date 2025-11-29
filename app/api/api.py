@@ -1,4 +1,3 @@
-import pandas as pd
 from fastapi import APIRouter, HTTPException, Form
 from fastapi.responses import ORJSONResponse
 from app.utils.helpers import (
