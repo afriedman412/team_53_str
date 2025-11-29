@@ -5,10 +5,10 @@ from typing import Dict, Any, Tuple, Optional
 import geopandas as gpd
 from shapely.geometry import Point
 from shapely.geometry.base import BaseGeometry
-
 from app.core.store import DataStore
 from app.core.config import CITY_CENTERS
-from app.utils.zip_lookup import zip_for_latlon
+
+# from app.utils.zip_lookup import zip_for_latlon
 from app.schemas.property import AddressData
 from app.utils.helpers import haversine
 from app.core.registry import get_store
@@ -22,8 +22,8 @@ def geocode_address(address: str | AddressData) -> Tuple[float, float]:
     address_ = str(address).replace(",", "")
     print("*** YOU ARE GETTING LAT LON FOR THIS:", address_)
     loc = store.geolocator.geocode(address_, exactly_one=True)
-    if not loc:
-        raise ValueError(f"Address not found: {address}")
+    # if not loc:
+    #     raise ValueError(f"Address not found: {address}")
     return (loc.latitude, loc.longitude)
 
 
@@ -45,7 +45,10 @@ def _iter_feature_sets(store: DataStore):
         yield "all_features", store.feature_index, store.gdf_features.geometry.values
 
 
-def calc_distances(lat: float, lon: float) -> Dict[str, float]:
+def calc_distances(
+    lat: float,
+    lon: float,
+) -> Dict[str, float]:
     store = get_store()
     pt_m = gpd.GeoSeries([Point(lon, lat)], crs=4326).to_crs(3857).iloc[0]
 
@@ -76,12 +79,9 @@ def calc_city_center_distance(address: AddressData) -> float:
 
 def validate_address_data(address: AddressData) -> AddressData:
     """
-    Fills out lat, lon and zip if needed in an AddressData object.
+    Fills out lat, lon if needed in an AddressData object.
     """
     if address.latitude is None or address.longitude is None:
         address.latitude, address.longitude = geocode_address(address)
-
-    if address.zipcode is None:
-        address.zipcode = zip_for_latlon(address.latitude, address.longitude)
 
     return address

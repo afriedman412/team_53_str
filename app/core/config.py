@@ -16,11 +16,39 @@ DATA_DIR = ROOT_DIR / "data"
 
 DATA_PATHS = {
     "osm": DATA_DIR / "osm" / "chicago_features.gpkg",
-    "zips": DATA_DIR / "geo" / "zcta_3857.parquet",
     "census": DATA_DIR / "census_data.parquet",
 }
 
 PIPELINE_PATH = ROOT_DIR / "models" / "pipeline.joblib"
+
+POPS_PATH = ROOT_DIR / "app" / "models" / "pops_"
+
+# for loading
+PIPELINE_PATHS = {
+    "properties": DATA_DIR / "df_clean_city_subset_111725.csv",
+    "embedder": PIPELINE_PATH / "embedder.pkl",
+    "embeddings": PIPELINE_PATH / "embeddings.pkl",
+    "assembler": PIPELINE_PATH / "assembler.pkl",
+}
+
+# for revenue predictions
+PRED_OPTIONS = {
+    "pool": [True, False],
+    "housekeeping": [True, False],
+    "gym": [True, False],
+    "free_parking": [True, False],
+}
+
+CSG_PALETTE = [
+    "#C9A84A",  # gold
+    "#1E2A39",  # dark navy
+    "#A9C7E4",  # light blue
+    "#78D0F8",  # cyan
+    "#E8E8E8",  # light gray
+    "#1A1A1A",  # near black
+    "#FFFFFF",  # white
+]
+
 
 # Geocoder settings
 # consider adding contact info per Nominatim policy
@@ -32,6 +60,16 @@ GEOCODER_MIN_INTERVAL_SEC = 1.1
 GEOCODER_CACHE_TTL_SEC = 24 * 60 * 60
 GEOCODER_CACHE_SIZE = 10000
 
+CITY_SUBSET = [
+    "boston-ma",
+    "washington-dc",
+    "denver-co",
+    "columbus-oh",
+    "twin-cities-mn",
+    "chicago-il",
+    "austin-tx",
+    "nashville-tn",
+]
 
 # inferred city center data
 CITY_CENTERS = {

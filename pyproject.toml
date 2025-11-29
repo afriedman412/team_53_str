@@ -1,6 +1,6 @@
 [tool.black]
 line-length = 100
-target-version = ["py312"]  # Also, py313 doesn't exist yet - use py312
+target-version = ["py312"]
 
 [tool.ruff]
 line-length = 100

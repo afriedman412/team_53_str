@@ -26,42 +26,21 @@ class AddressData(BaseModel):
         return f"AddressData({self.address!r})"
 
 
-class PropertyData(BaseModel):
-    # Strict schema matching your features; expand/adjust as needed
-    neighbourhood_cleansed: str
+class PropertyGeographic(BaseModel):
     latitude: float
     longitude: float
-    # or Literal["Entire home/apt","Private room","Shared room","Hotel room"]
-    room_type: str
-    accommodates: float
-    bathrooms: float
-    bedrooms: float
-    beds: float
-    # or Literal["entire","private","shared"]
-    privacy: str
-    state: str  # or Literal["ma","il","ny", ...]
-    air_conditioning: bool
-    heating: bool
-    free_parking: bool
-    gym: bool
-    housekeeping: bool
-    pool: bool
-    pool_shared: bool
-    pool_private: bool
-    pool_indoor: bool
-    pool_outdoor: bool
-    hot_tub: bool
-    hot_tub_shared: bool
-    hot_tub_private: bool
-    paid_parking: bool
-    avg_price: float
-    med_price: float
+    state: str
+    zipcode: str
+
+    # Distances
     dist_to_airport_km: float
     dist_to_train_km: float
     dist_to_park_km: float
     dist_to_university_km: float
     dist_to_bus_km: float
     dist_to_city_center_km: float
+
+    # Census
     median_income: float
     median_gross_rent: float
     population: float
@@ -87,5 +66,46 @@ class PropertyData(BaseModel):
     poverty_rate: float
     percent_over_65: float
 
-    # Pydantic config: reject unexpected fields to catch typos early
-    model_config = ConfigDict(extra="forbid")
+    model_config = {"extra": "ignore"}  # base is strict but ignore extra fields
+
+
+class PropertyControls(BaseModel):
+    bedrooms: int
+    beds: int
+    accommodates: int
+    bathrooms: float
+
+    air_conditioning: bool
+    heating: bool
+    free_parking: bool
+    paid_parking: bool
+
+    gym: bool
+    housekeeping: bool
+
+    pool: bool
+    pool_private: bool
+    pool_shared: bool
+    pool_indoor: bool
+    pool_outdoor: bool
+
+    hot_tub: bool
+    hot_tub_private: bool
+    hot_tub_shared: bool
+
+    # Privacy (one-hot)
+    privacy_private: bool = False
+    privacy_room_in: bool = False
+    privacy_shared: bool = False
+
+    # Room type (one-hot)
+    room_type_entire: bool = False
+    room_type_private_room: bool = False
+    room_type_shared_room: bool = False
+    room_type_hotel_room: bool = False
+
+    model_config = {"extra": "ignore"}
+
+
+class PropertyData(PropertyGeographic, PropertyControls):
+    model_config = {"extra": "ignore"}

@@ -3,33 +3,267 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Chicago STR Evaluator</title>
+        <title>STR Revenue Estimator</title>
         <script src="https://cdn.tailwindcss.com"></script>
+        <style>
+    :root {
+      --gold: #C9A84A;
+      --navy: #1E2A39;
+      --light-blue: #A9C7E4;
+      --cyan: #78D0F8;
+      --light-gray: #E8E8E8;
+      --near-black: #1A1A1A;
+      --white: #FFFFFF;
+    }
+  </style>
     </head>
-    <body class="min-h-screen flex items-center justify-center bg-gray-50">
-        <div class="w-full max-w-md p-8 bg-white shadow-lg rounded-xl">
-            <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">
-                Chicago STR Evaluator
-            </h1>
+    <body class="min-h-screen bg-[var(--light-gray)] text-[var(--near-black)]">
+        <div class="max-w-6xl mx-auto py-10 px-4 md:px-8">
+            <!-- Header -->
+            <header class="mb-8">
+                <h1 class="text-3xl md:text-4xl font-semibold text-[var(--navy)]">
+                    STR Revenue Estimator
+                </h1>
+                <p class="text-[var(--navy)]/70 mt-2">
+                    Estimate annual revenue and see how amenities move the needle.
+                </p>
+            </header>
 
-            <form action="input/from_url" method="post" class="space-y-4">
-                <input
-                    type="url"
-                    name="url"
-                    placeholder="Paste listing URL..."
-                    required
-                    class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <!-- Main grid: input left, output right -->
+            <div class="grid gap-6 md:grid-cols-2 items-start">
+                <!-- INPUT CARD -->
+                <section
+                    id="input-card"
+                    class="bg-[var(--white)] shadow-md rounded-xl p-6 space-y-6 border border-[var(--navy)]/5">
+                    <h2 class="text-2xl font-medium text-[var(--navy)]">Listing Details</h2>
 
-                <button
-                    type="submit"
-                    class="w-full bg-blue-600 text-white font-semibold py-3 rounded-lg hover:bg-blue-700 transition">
-                    Analyze
-                </button>
-            </form>
+                    <!-- Zillow URL -->
+                    <div>
+                        <label class="block font-medium text-[var(--navy)] mb-1">
+                            Zillow URL
+                        </label>
+                        <input
+                            id="zurl"
+                            type="text"
+                            placeholder="https://www.zillow.com/..."
+                            class="w-full rounded-md px-3 py-2 border border-[var(--navy)]/20
+                   bg-[var(--light-gray)]/40
+                   focus:outline-none focus:ring-2 focus:ring-[var(--cyan)] focus:border-[var(--cyan)]" />
+                    </div>
 
-            <div class="mt-6 text-center text-sm text-gray-500">
-                or <a href="/manual" class="text-blue-600 hover:underline">enter features manually</a>
+                    <!-- Bedrooms & Bathrooms -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block font-medium text-[var(--navy)] mb-1">
+                                Bedrooms
+                            </label>
+                            <input
+                                id="beds"
+                                type="number"
+                                min="0"
+                                class="w-full rounded-md px-3 py-2 border border-[var(--navy)]/20
+                     bg-[var(--light-gray)]/40
+                     focus:outline-none focus:ring-2 focus:ring-[var(--cyan)] focus:border-[var(--cyan)]" />
+                        </div>
+                        <div>
+                            <label class="block font-medium text-[var(--navy)] mb-1">
+                                Bathrooms
+                            </label>
+                            <input
+                                id="baths"
+                                type="number"
+                                min="0"
+                                step="0.5"
+                                class="w-full rounded-md px-3 py-2 border border-[var(--navy)]/20
+                     bg-[var(--light-gray)]/40
+                     focus:outline-none focus:ring-2 focus:ring-[var(--cyan)] focus:border-[var(--cyan)]" />
+                        </div>
+                    </div>
+
+                    <!-- Accommodates -->
+                    <div>
+                        <label class="block font-medium text-[var(--navy)] mb-1">
+                            Accommodates
+                        </label>
+                        <input
+                            id="accommodates"
+                            type="number"
+                            min="1"
+                            class="w-full rounded-md px-3 py-2 border border-[var(--navy)]/20
+                   bg-[var(--light-gray)]/40
+                   focus:outline-none focus:ring-2 focus:ring-[var(--cyan)] focus:border-[var(--cyan)]" />
+                    </div>
+
+                    <!-- Submit -->
+                    <button
+                        id="submit-btn"
+                        class="w-full bg-[var(--navy)] text-[var(--white)] py-3 rounded-lg text-lg
+                 font-medium flex items-center justify-center gap-2
+                 hover:bg-[var(--gold)] hover:text-[var(--near-black)]
+                 transition-colors">
+                        <span>Estimate Revenue</span>
+                    </button>
+
+                    <!-- Tiny helper text -->
+                    <p class="text-xs text-[var(--navy)]/60">
+                        We’ll use the address and neighborhood from Zillow plus your inputs
+                        to simulate amenity scenarios.
+                    </p>
+                </section>
+
+                <!-- OUTPUT CARD -->
+                <section
+                    id="output-section"
+                    class="bg-[var(--white)] shadow-md rounded-xl p-6 space-y-6 border border-[var(--navy)]/5
+               flex flex-col">
+                    <!-- While empty -->
+                    <div id="output-empty" class="text-[var(--navy)]/60 text-sm">
+                        Fill in the form and click
+                        <span class="font-semibold">Estimate Revenue</span> to see results.
+                    </div>
+
+                    <!-- Populated content -->
+                    <div id="output-content" class="hidden space-y-6 flex-1">
+                        <!-- Address & headline numbers -->
+                        <div class="space-y-2">
+                            <p class="text-xs uppercase tracking-[0.18em] text-[var(--navy)]/60">
+                                Estimate for
+                            </p>
+                            <h2
+                                id="addr"
+                                class="text-2xl md:text-3xl font-semibold text-[var(--navy)]"></h2>
+                            <p
+                                id="rev"
+                                class="text-3xl md:text-4xl font-bold text-[var(--gold)]"></p>
+                            <p
+                                id="priceocc"
+                                class="text-sm md:text-base text-[var(--navy)]/80"></p>
+                        </div>
+
+                        <!-- Thin divider -->
+                        <div class="h-px bg-[var(--navy)]/10"></div>
+
+                        <!-- Amenity uplift -->
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between gap-2">
+                                <h3 class="text-xl font-medium text-[var(--navy)]">
+                                    Amenity Uplift
+                                </h3>
+                                <span
+                                    class="text-xs rounded-full px-3 py-1 bg-[var(--navy)] text-[var(--white)]">
+                                    Annual revenue delta
+                                </span>
+                            </div>
+
+                            <!-- Chart image from backend -->
+                            <div
+                                class="bg-[var(--light-gray)]/60 rounded-lg border border-[var(--navy)]/10 p-3">
+                                <img
+                                    id="uplift-img"
+                                    class="w-full rounded-md shadow-sm"
+                                    alt="Amenity uplift chart" />
+                            </div>
+                        </div>
+                    </div>
+                </section>
             </div>
         </div>
+
+        <!-- Hook up to your API here -->
+        <script>
+  const btn = document.getElementById("submit-btn");
+  const outEmpty = document.getElementById("output-empty");
+  const outContent = document.getElementById("output-content");
+
+  const addrEl = document.getElementById("addr");
+  const revEl = document.getElementById("rev");
+  const priceOccEl = document.getElementById("priceocc");
+  const upliftImgEl = document.getElementById("uplift-img");
+
+  btn.onclick = async () => {
+    const zurl = document.getElementById("zurl").value.trim();
+    const beds = document.getElementById("beds").value;
+    const baths = document.getElementById("baths").value;
+    const acc = document.getElementById("accommodates").value;
+
+    if (!zurl) {
+      alert("Please enter a Zillow or Redfin URL.");
+      return;
+    }
+
+    // Optional: simple disabled/loading state
+    btn.disabled = true;
+    btn.innerText = "Estimating...";
+
+    try {
+      const formData = new FormData();
+      formData.append("url", zurl);
+      formData.append("bedrooms", beds);
+      formData.append("bathrooms", baths);
+      formData.append("accommodates", acc);
+
+      const res = await fetch("api/perms_from_url", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        console.error("API error", err);
+        alert(err.detail || "Failed to estimate revenue.");
+        return;
+      }
+
+      const data = await res.json();
+
+      // Expecting backend like:
+      // {
+      //   address: "123 Example St...",
+      //   revenue: 15870.23,
+      //   price_pred: 162.3,
+      //   occ_pred: 128.4,
+      //   uplift_chart_url: "https://...png"
+      // }
+
+      const address = data.address || "Unknown address";
+      const revenue = data.revenue ?? null;
+      const price = data.price_pred ?? null;
+      const occ = data.occ_pred ?? null;
+
+      addrEl.innerText = address;
+
+      if (revenue != null) {
+        revEl.innerText = `$${Math.round(revenue).toLocaleString()} / yr`;
+      } else {
+        revEl.innerText = "—";
+      }
+
+      if (price != null && occ != null) {
+        priceOccEl.innerText = `$${Math.round(price)} / night · ${Math.round(
+          occ
+        )} nights`;
+      } else {
+        priceOccEl.innerText = "";
+      }
+
+      if (data.uplift_chart_png) {
+        upliftImgEl.src = "data:image/png;base64," + data.uplift_chart_png;
+        upliftImgEl.alt = "Amenity uplift chart";
+    } else {
+        upliftImgEl.removeAttribute("src");
+        upliftImgEl.alt = "No uplift chart available";
+    }
+
+      outEmpty.classList.add("hidden");
+      outContent.classList.remove("hidden");
+    } catch (err) {
+      console.error(err);
+      alert("Unexpected error while calling the API.");
+    } finally {
+      btn.disabled = false;
+      btn.innerText = "Estimate Revenue";
+    }
+  };
+</script>
     </body>
 </html>
