@@ -54,7 +54,8 @@ pytest_cache/
 data/geo/
 !data/.gitkeep
 !data/README.md
-models/
+old_models/
+model/
 !models/.gitkeep
 !models/README.md
 
