@@ -72,7 +72,7 @@ async def preds_from_url(
     base_df["dist_to_bus_km"] = 50
     base_df, changes = coerce_df_to_match_schema(base_df, StructuralSchema)
     # 3) Generate predictions
-    preds = store.pipeline.predict(base_df)
+    preds = store.pipeline.predict(base_df).to_dict()
 
     return ORJSONResponse(content=preds, status_code=200)
 
@@ -98,6 +98,7 @@ async def perms_from_url(
     # Adjust this to match your actual build_base signature
     base = build_base(address=address)
     base.update(SCENARIO_DEFAULTS)
+    base["dist_to_bus_km"] = 50
 
     input_values = {
         "bedrooms": bedrooms,
@@ -108,6 +109,8 @@ async def perms_from_url(
 
     # 3) Generate permutations + run predictions + explanations
     permo_df = assemble_options(base, input_values)
+    permo_df = scenario_df_verify(permo_df)
+    permo_df, changes = coerce_df_to_match_schema(permo_df, StructuralSchema)
     preds_and_exp = store.pipeline.predict_and_explain(permo_df)
 
     # 4) Shape a clean response for the UI
