@@ -195,11 +195,13 @@ class Pops:
         rev_pred = self.rev_model.predict(X_base, price_pred, occ_pred)
 
         self.df_with_embeds = X_base
-        return {
-            "price_pred": price_pred,
-            "occ_pred": occ_pred,
-            "rev_final_pred": rev_pred,
-        }
+        return pd.DataFrame(
+            {
+                "price_pred": price_pred,
+                "occ_pred": occ_pred,
+                "rev_final_pred": rev_pred,
+            }
+        )
 
     def _build_embedder(self):
         self.embedder = PerformanceGraphEmbedderV3(**EMBEDDING_CONFIG)
