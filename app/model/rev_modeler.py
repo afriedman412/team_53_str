@@ -28,8 +28,7 @@ class RevenueModeler:
          - rev_corr_target
         """
         # should just be structural + embeddings
-        modeling_cols = get_modeling_columns(df)
-        X = df[modeling_cols]
+        X = get_modeling_columns(df)
 
         # base predictions
         price_pred = price_model.predict(X)

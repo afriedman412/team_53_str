@@ -14,7 +14,18 @@ from app.core.config import CSG_PALETTE
 from app.model.embedder import PerformanceGraphEmbedderV3
 from app.model.base_model import LightGBMRegressorCV
 from app.model.rev_modeler import RevenueModeler
-from app.model.helpers import get_modeling_columns
+from app.model.helpers import (
+    get_modeling_columns,
+    check_schema_compatibility,
+    canonical_data_cleaning,
+)
+from app.schemas.validator import (
+    PriceTrainingSchema,
+    OccupancyTrainingSchema,
+    RevenueTrainingSchema,
+    FullTrainingSchema,
+    StructuralSchema,
+)
 
 
 class Pops:
@@ -33,6 +44,7 @@ class Pops:
         self.embeddings = None
         self.embedder = None
         self.city_col = city_col
+        self.training_library = {}
 
         # --- Load saved embeddings (optional) ---
         if embeddings_path is not None:
@@ -68,15 +80,19 @@ class Pops:
             self.embeddings = self.embedder.fit_transform(training_df, self.city_col)
         return self.embeddings
 
-    def fit(self, training_df):
+    def fit_with_library(self, training_df):
         """
-        REMOVE ZEROS WHEN TRAINING
-        df_ = df[df['estimated_revenue_l365d'] > 0]
+        Same as fit_with_library but it saves the data at every step.
+
+        So you can ensure compatability.
         """
+        self.training_library["training_df"] = training_df
         if self.embeddings is None:
             print("*** GETTING EMBEDDINGS")
             self.train_embeddings(training_df)
+        self.training_library["embeddings"] = self.embeddings
         df_with_embeddings = pd.concat([training_df, self.embeddings], axis=1)
+        self.training_library["df_with_embeddings"] = df_with_embeddings
         print("*** PRICE MODEL")
         self.price_model = self._run_model("price", df_with_embeddings, evaluate=True)
         print("*** OCCUPANCY MODEL")
@@ -88,7 +104,39 @@ class Pops:
         X_corr, y_corr, _ = rm.prepare_training_data(
             df_with_embeddings, self.price_model, self.occ_model
         )
+        self.training_library["X_corr"] = X_corr
+        self.training_library["y_corr"] = y_corr
 
+        rm.fit(X_corr, y_corr)
+        self.rev_model = rm
+
+        print("*** BUILDING SHAP TREES")
+        self._build_shap_trees()
+        print("*** DONE TRAINING")
+        return
+
+    def fit(self, training_df):
+        """
+        REMOVE ZEROS WHEN TRAINING
+        df_ = df[df['estimated_revenue_l365d'] > 0]
+        """
+        training_df = canonical_data_cleaning(training_df)
+        if self.embeddings is None:
+            print("*** GETTING EMBEDDINGS")
+            self.train_embeddings(training_df)
+
+        modeling_df = pd.concat([training_df, self.embeddings], axis=1)
+
+        print("*** PRICE MODEL")
+        self.price_model = self._run_model("price", modeling_df, evaluate=True)
+        print("*** OCCUPANCY MODEL")
+        self.occ_model = self._run_model("occupancy", modeling_df, evaluate=True)
+
+        rm = RevenueModeler()
+
+        print("*** REVENUE MODEL")
+        X_corr, y_corr, _ = rm.prepare_training_data(modeling_df, self.price_model, self.occ_model)
+        check_schema_compatibility(X_corr, RevenueTrainingSchema)
         rm.fit(X_corr, y_corr)
         self.rev_model = rm
 
@@ -109,6 +157,13 @@ class Pops:
         ):
             raise ValueError("Pipeline not fitted yet.")
 
+        check_schema_compatibility(
+            df_input,
+            StructuralSchema,
+            df_name="predict_input_raw",
+            raise_on_error=True,
+        )
+
         required_cols = ["latitude", "longitude"]
         missing = [c for c in required_cols if c not in df_input.columns]
         if missing:
@@ -124,6 +179,13 @@ class Pops:
         df_input = df_input[self.structural_cols]
         X_base = df_input.join(new_embeddings)
 
+        check_schema_compatibility(
+            X_base,
+            FullTrainingSchema,
+            df_name="predict_X_base",
+            raise_on_error=True,
+        )
+
         # 3) Price + occupancy predictions (original scale)
         print("*** PREDICTING PRICE")
         price_pred = self.price_model.predict(X_base)
@@ -133,13 +195,11 @@ class Pops:
         rev_pred = self.rev_model.predict(X_base, price_pred, occ_pred)
 
         self.df_with_embeds = X_base
-        return pd.DataFrame(
-            {
-                "price_pred": price_pred,
-                "occ_pred": occ_pred,
-                "rev_final_pred": rev_pred,
-            }
-        )
+        return {
+            "price_pred": price_pred,
+            "occ_pred": occ_pred,
+            "rev_final_pred": rev_pred,
+        }
 
     def _build_embedder(self):
         self.embedder = PerformanceGraphEmbedderV3(**EMBEDDING_CONFIG)
@@ -156,25 +216,102 @@ class Pops:
             print("No embedder loaded!")
         return
 
-    def _run_model(self, params_key, df, evaluate=False):
-        params = MODEL_DATA[params_key]["params"]
-        transform = MODEL_DATA[params_key]["transform"]
-        target = MODEL_DATA[params_key]["target"]
-        self.modeling_cols = get_modeling_columns(df)
-        X = df[self.modeling_cols]
-        y = df[target]
+    def _run_model(self, model_key, df, evaluate=False):
+        params = MODEL_DATA[model_key]["params"]
+        transform = MODEL_DATA[model_key]["transform"]
+
+        # Get properly validated X, y
+        X, y = self._prepare_modeling_frame(df, model_key)
 
         model = LightGBMRegressorCV(
             params=params,
             transform=transform,
             n_splits=5,
         )
-
         model.fit(X, y)
+
         if evaluate:
             preds = model.predict(X)
             self.evaluate(y, preds)
+
         return model
+
+    def _prepare_modeling_frame(self, df, model_key):
+        """
+        Build and VALIDATE modeling X and y for a model.
+
+        Validations performed:
+        - Validate full df for model-specific schema
+        - Confirm modeling_cols exists and matches FullTrainingSchema
+        - Validate X against FullTrainingSchema
+        - Validate y exists, no nulls, correct dtype
+        """
+
+        target = MODEL_DATA[model_key]["target"]
+
+        # ------------------------------------------------------------
+        # 1. SCHEMA VALIDATION ON FULL DF
+        # ------------------------------------------------------------
+        if model_key == "price":
+            check_schema_compatibility(df, PriceTrainingSchema, df_name="price_training_df")
+        elif model_key == "occupancy":
+            check_schema_compatibility(df, OccupancyTrainingSchema, df_name="occ_training_df")
+        # Revenue schema is validated after prepare_training_data
+
+        # ------------------------------------------------------------
+        # 2. BUILD MODELING COLS (structural + perf_emb_*)
+        # ------------------------------------------------------------
+        perf_emb_cols = df.filter(regex="^perf_emb_").columns.tolist()
+        modeling_cols = self.structural_cols + perf_emb_cols
+
+        # store for predict() and SHAP
+        self.modeling_cols = modeling_cols
+
+        # ------------------------------------------------------------
+        # 3. Extract X and y
+        # ------------------------------------------------------------
+        if any(col not in df.columns for col in modeling_cols):
+            missing = [c for c in modeling_cols if c not in df.columns]
+            raise ValueError(f"Modeling columns missing: {missing}")
+
+        X = df[modeling_cols]
+
+        if target not in df.columns:
+            raise ValueError(f"Target column '{target}' missing in df.")
+
+        y = df[target]
+
+        # ------------------------------------------------------------
+        # 4. VALIDATE X SPECIFICALLY AGAINST FullTrainingSchema
+        # ------------------------------------------------------------
+        # FullTrainingSchema expects struct + perf_embeddings only.
+        # So build a schema for those columns specifically.
+        full_schema_cols = set(FullTrainingSchema.columns.keys())
+        expected_X_cols = set(modeling_cols)
+
+        # sanity: schemas should match modeling_cols exactly
+        if expected_X_cols != full_schema_cols:
+            diff_missing = sorted(full_schema_cols - expected_X_cols)
+            diff_extra = sorted(expected_X_cols - full_schema_cols)
+            raise ValueError(
+                "Mismatch between modeling columns and FullTrainingSchema.\n"
+                f"Missing in X: {diff_missing}\n"
+                f"Extra in X: {diff_extra}\n"
+            )
+
+        # Now validate the actual X frame
+        check_schema_compatibility(X, FullTrainingSchema, df_name=f"{model_key}_X")
+
+        # ------------------------------------------------------------
+        # 5. Validate y
+        # ------------------------------------------------------------
+        if y.isnull().any():
+            raise ValueError(f"Target '{target}' contains null values.")
+
+        if not np.issubdtype(y.dtype, np.number):
+            raise TypeError(f"Target '{target}' must be numeric, got dtype {y.dtype}.")
+
+        return X, y
 
     def _build_shap_trees(self):
         import shap

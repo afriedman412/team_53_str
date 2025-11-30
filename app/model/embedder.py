@@ -9,8 +9,9 @@ from tqdm import tqdm
 from typing import List, Dict
 from app.core.model_config import DISTANCE_BANDS
 from app.core.col_control import PERF_FEATS, STRUCTURAL_FEATS
-
-import faiss  # <-- NEW
+from app.model.helpers import check_schema_compatibility
+from app.schemas.validator import EmbeddingSchema, StructuralSchema
+import faiss
 
 EARTH_RADIUS_KM = 6371.0
 
@@ -206,10 +207,42 @@ class PerformanceGraphEmbedderV3:
     # -------------------------------------------------------------
 
     def fit(self, df, city_col="city"):
-        self.df = df.copy()
+        """
+        Elaborate code to mean out nulls
+        """
+        df = df[self.perf_features + self.structural_features + [city_col]]
+
+        cleaned_rows = []
+
         for city, df_city in tqdm(df.groupby(city_col), desc="Training embeddings by city"):
+
+            df_city = df_city.copy()
+
+            for k in [
+                "host_response_rate",
+                "host_acceptance_rate",
+                "days_as_host",
+                "host_listings_count",
+                "host_total_listings_count",
+                "bedrooms",
+                "beds",
+                "maximum_maximum_nights",
+                "minimum_maximum_nights",
+                "minimum_minimum_nights",
+                "maximum_minimum_nights",
+                "bathrooms",
+            ]:
+                if k in df_city:
+                    df_city[k] = df_city[k].fillna(df_city[k].mean())
+
+            # Schema check
+            check_schema_compatibility(df_city, EmbeddingSchema, df_name=f"embedding_df_{city}")
+
+            # Train for this city
             self._fit_city(df_city, city)
-        self.training_df = df
+            cleaned_rows.append(df_city)
+
+        self.training_df = pd.concat(cleaned_rows, axis=0)
         return self
 
     # -------------------------------------------------------------
@@ -240,9 +273,7 @@ class PerformanceGraphEmbedderV3:
         """
         outputs = []
 
-        if city_col not in df_new:
-            city_col = "slice"
-
+        check_schema_compatibility(df_new, StructuralSchema, df_name="embedding_pred")
         for city, df_city in df_new.groupby(city_col):
             if city not in self.city_perf_embeddings:
                 print(f"[warning] No trained embedder for city={city}, skipping.")
