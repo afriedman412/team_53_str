@@ -1,41 +1,92 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>STR Revenue Estimator</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>STR Revenue Estimator — Chicago Strategy Group</title>
         <script src="https://cdn.tailwindcss.com"></script>
+
+        <!-- Montserrat font to match the report -->
+        <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap"
+            rel="stylesheet">
+
         <style>
     :root {
       --gold: #C9A84A;
       --navy: #1E2A39;
       --light-blue: #A9C7E4;
       --cyan: #78D0F8;
-      --light-gray: #E8E8E8;
-      --near-black: #1A1A1A;
+      --light-gray: #F4F4F4;
       --white: #FFFFFF;
+      --near-black: #1A1A1A;
+    }
+
+    body {
+      font-family: 'Montserrat', sans-serif;
     }
   </style>
     </head>
-    <body class="min-h-screen bg-[var(--light-gray)] text-[var(--near-black)]">
-        <div class="max-w-6xl mx-auto py-10 px-4 md:px-8">
-            <!-- Header -->
-            <header class="mb-8">
-                <h1 class="text-3xl md:text-4xl font-semibold text-[var(--navy)]">
-                    STR Revenue Estimator
-                </h1>
-                <p class="text-[var(--navy)]/70 mt-2">
-                    Estimate annual revenue and see how amenities move the needle.
-                </p>
-            </header>
 
-            <!-- Main grid: input left, output right -->
-            <div class="grid gap-6 md:grid-cols-2 items-start">
+    <body class="min-h-screen bg-[var(--light-gray)] text-[var(--near-black)]">
+
+        <!-- GOLD HEADER BAR (like report cover) -->
+        <div class="w-full bg-[var(--gold)] py-6 shadow-md">
+
+            <div class="max-w-6xl mx-auto px-5 md:px-8 md:pl-28">
+                <h1 class="text-3xl md:text-4xl font-semibold text-[var(--navy)] tracking-tight">
+                    Short-Term Rental Revenue Estimator
+                </h1>
+            </div>
+        </div>
+
+        <!-- LEFT BRANDING BAR -->
+        <div class="hidden md:flex fixed top-0 left-0 h-full w-1/6 min-w-[160px] max-w-[210px] shadow-lg z-20">
+            <!-- Background skyline image -->
+            <div class="absolute inset-0 bg-center bg-cover"
+                style="background-image: url('/static/skyline.jpg');">
+            </div>
+
+            <!-- Navy overlay for contrast -->
+            <div class="absolute inset-0"></div>
+
+            <!-- Foreground: logo + small mark -->
+                <div class="relative flex flex-col items-center justify-between pt-10 pb-6 w-full z-10">
+                    
+                    <!-- Bigger logo wrapper -->
+                    <div class="w-40 h-40 md:w-48 md:h-48 overflow-hidden flex items-center justify-center">
+                        <img
+                        src="/static/csg_logo.png"
+                        alt="Chicago Strategy Group"
+                        class="w-56 md:w-64 h-auto -translate-y-3 drop-shadow-lg"
+                        />
+                    </div>
+
+                    <!-- Tiny bottom mark -->
+                    <span class="text-[var(--gold)] text-[10px] tracking-[0.35em] uppercase">
+                        CSG
+                    </span>
+                
+                </div>
+            </div>
+        </div>
+
+        <div class="max-w-6xl mx-auto py-10 px-5 md:px-8 md:pl-28">
+
+            <!-- Subtitle -->
+            <p class="text-[var(--navy)]/80 mt-2 text-base md:text-lg mb-8">
+                Estimate annual revenue and see how amenities move the needle.
+            </p>
+
+            <div class="grid gap-8 md:grid-cols-2 items-start">
+
                 <!-- INPUT CARD -->
                 <section
                     id="input-card"
-                    class="bg-[var(--white)] shadow-md rounded-xl p-6 space-y-6 border border-[var(--navy)]/5">
-                    <h2 class="text-2xl font-medium text-[var(--navy)]">Listing Details</h2>
+                    class="bg-[var(--white)] shadow-lg rounded-xl p-8 space-y-6 border border-[var(--navy)]/10">
+
+                    <h2 class="text-2xl font-semibold text-[var(--navy)] mb-4">
+                        Listing Details
+                    </h2>
 
                     <!-- Zillow URL -->
                     <div>
@@ -46,40 +97,28 @@
                             id="zurl"
                             value="https://www.zillow.com/homedetails/555-W-Cornelia-Ave-APT-1011-Chicago-IL-60657/3717256_zpid/"
                             type="text"
-                            placeholder="https://www.zillow.com/..."
-                            class="w-full rounded-md px-3 py-2 border border-[var(--navy)]/20
-                   bg-[var(--light-gray)]/40
-                   focus:outline-none focus:ring-2 focus:ring-[var(--cyan)] focus:border-[var(--cyan)]" />
+                            class="w-full rounded-md px-3 py-2 border border-[var(--navy)]/20 bg-[var(--light-gray)]/50
+                   focus:outline-none focus:ring-2 focus:ring-[var(--navy)]" />
                     </div>
 
-                    <!-- Bedrooms & Bathrooms -->
+                    <!-- Bedrooms + Bathrooms -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block font-medium text-[var(--navy)] mb-1">
                                 Bedrooms
                             </label>
-                            <input
-                                id="beds"
-                                value="2"
-                                type="number"
-                                min="0"
-                                class="w-full rounded-md px-3 py-2 border border-[var(--navy)]/20
-                     bg-[var(--light-gray)]/40
-                     focus:outline-none focus:ring-2 focus:ring-[var(--cyan)] focus:border-[var(--cyan)]" />
+                            <input id="beds" value="2" type="number" min="0"
+                                class="w-full rounded-md px-3 py-2 border border-[var(--navy)]/20 bg-[var(--light-gray)]/50
+                     focus:outline-none focus:ring-2 focus:ring-[var(--navy)]" />
                         </div>
+
                         <div>
                             <label class="block font-medium text-[var(--navy)] mb-1">
                                 Bathrooms
                             </label>
-                            <input
-                                id="baths"
-                                value="2"
-                                type="number"
-                                min="0"
-                                step="0.5"
-                                class="w-full rounded-md px-3 py-2 border border-[var(--navy)]/20
-                     bg-[var(--light-gray)]/40
-                     focus:outline-none focus:ring-2 focus:ring-[var(--cyan)] focus:border-[var(--cyan)]" />
+                            <input id="baths" value="2" type="number" min="0" step="0.5"
+                                class="w-full rounded-md px-3 py-2 border border-[var(--navy)]/20 bg-[var(--light-gray)]/50
+                     focus:outline-none focus:ring-2 focus:ring-[var(--navy)]" />
                         </div>
                     </div>
 
@@ -88,96 +127,84 @@
                         <label class="block font-medium text-[var(--navy)] mb-1">
                             Accommodates
                         </label>
-                        <input
-                            id="accommodates"
-                            type="number"
-                            value="4"
-                            min="1"
-                            class="w-full rounded-md px-3 py-2 border border-[var(--navy)]/20
-                   bg-[var(--light-gray)]/40
-                   focus:outline-none focus:ring-2 focus:ring-[var(--cyan)] focus:border-[var(--cyan)]" />
+                        <input id="accommodates" value="4" type="number" min="1"
+                            class="w-full rounded-md px-3 py-2 border border-[var(--navy)]/20 bg-[var(--light-gray)]/50
+                   focus:outline-none focus:ring-2 focus:ring-[var(--navy)]" />
                     </div>
 
-                    <!-- Submit -->
+                    <!-- Submit button -->
                     <button
                         id="submit-btn"
-                        class="w-full bg-[var(--navy)] text-[var(--white)] py-3 rounded-lg text-lg
-                 font-medium flex items-center justify-center gap-2
+                        class="w-full bg-[var(--navy)] text-[var(--white)] py-3 rounded-lg text-lg font-semibold
                  hover:bg-[var(--gold)] hover:text-[var(--near-black)]
-                 transition-colors">
-                        <span>Estimate Revenue</span>
+                 transition-colors shadow-md">
+                        Estimate Revenue
                     </button>
-
-                    <!-- Tiny helper text -->
-                    <p class="text-xs text-[var(--navy)]/60">
-                        We’ll use the address and neighborhood from Zillow plus your inputs
-                        to simulate amenity scenarios.
-                    </p>
                 </section>
 
                 <!-- OUTPUT CARD -->
                 <section
                     id="output-section"
-                    class="bg-[var(--white)] shadow-md rounded-xl p-6 space-y-6 border border-[var(--navy)]/5
-               flex flex-col">
-                    <!-- While empty -->
-                    <div id="output-empty" class="text-[var(--navy)]/60 text-sm">
-                        Fill in the form and click
-                        <span class="font-semibold">Estimate Revenue</span> to see results.
+                    class="bg-[var(--white)] shadow-lg rounded-xl p-8 space-y-6 border border-[var(--navy)]/10 flex flex-col">
+
+                    <div id="output-empty" class="text-[var(--navy)]/50 text-sm">
+                        Fill in the form and click <span class="font-semibold">Estimate Revenue</span> to see results.
                     </div>
 
-                    <!-- Populated content -->
                     <div id="output-content" class="hidden space-y-6 flex-1">
-                        <!-- Address & headline numbers -->
                         <div class="space-y-2">
-                            <p class="text-xs uppercase tracking-[0.18em] text-[var(--navy)]/60">
+                            <p class="text-xs uppercase tracking-widest text-[var(--navy)]/50">
                                 Estimate for
                             </p>
-                            <h2
-                                id="addr"
-                                class="text-2xl md:text-3xl font-semibold text-[var(--navy)]"></h2>
-                            <p
-                                id="rev"
-                                class="text-3xl md:text-4xl font-bold text-[var(--gold)]"></p>
-                            <p
-                                id="priceocc"
-                                class="text-sm md:text-base text-[var(--navy)]/80"></p>
+                            <h2 id="addr" class="text-2xl font-semibold text-[var(--navy)]"></h2>
+                            <p id="rev" class="text-4xl font-bold text-[var(--gold)]"></p>
+                            <p id="priceocc" class="text-sm text-[var(--navy)]/80"></p>
                         </div>
 
-                        <!-- Thin divider -->
                         <div class="h-px bg-[var(--navy)]/10"></div>
 
-                        <!-- Amenity uplift -->
                         <div class="space-y-3">
-                            <div class="flex items-center justify-between gap-2">
-                                <h3 class="text-xl font-medium text-[var(--navy)]">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-xl font-semibold text-[var(--navy)]">
                                     Amenity Uplift
                                 </h3>
-                                <span
-                                    class="text-xs rounded-full px-3 py-1 bg-[var(--navy)] text-[var(--white)]">
+                                <span class="text-xs rounded-full px-3 py-1 bg-[var(--navy)] text-[var(--white)]">
                                     Annual revenue delta
                                 </span>
                             </div>
 
-                            <!-- Chart image from backend -->
-                            <div
-                                class="bg-[var(--light-gray)]/60 rounded-lg border border-[var(--navy)]/10 p-3">
-                                <img
-                                    id="uplift-img"
-                                    class="w-full rounded-md shadow-sm"
-                                    alt="Amenity uplift chart" />
+                            <div class="bg-[var(--light-gray)]/50 rounded-lg border border-[var(--navy)]/10 p-3">
+                                <img id="uplift-img" class="w-full rounded-md shadow-sm" alt="Amenity uplift chart" />
                             </div>
                         </div>
                     </div>
+
                 </section>
+
+            </div>
+
+        </div>
+        <!-- LOADING OVERLAY -->
+        <div id="loading-overlay"
+            class="fixed inset-0 bg-black/20 backdrop-blur-sm hidden z-50 flex justify-center items-start pt-120 md:pt-40">
+
+            <div class="flex flex-col items-center gap-4">
+                <!-- Spinner -->
+                <div class="w-12 h-12 border-4 border-[var(--navy)] border-t-[var(--gold)]
+                rounded-full animate-spin"></div>
+
+                <p class="text-[var(--navy)] font-semibold text-lg drop-shadow">
+                    Evaluating property…
+                </p>
             </div>
         </div>
 
-        <!-- Hook up to your API here -->
+        <!-- Existing JS preserved exactly -->
         <script>
   const btn = document.getElementById("submit-btn");
   const outEmpty = document.getElementById("output-empty");
   const outContent = document.getElementById("output-content");
+  const overlay = document.getElementById("loading-overlay");
 
   const addrEl = document.getElementById("addr");
   const revEl = document.getElementById("rev");
@@ -195,9 +222,8 @@
       return;
     }
 
-    // Optional: simple disabled/loading state
     btn.disabled = true;
-    btn.innerText = "Estimating...";
+    overlay.classList.remove("hidden");
 
     try {
       const formData = new FormData();
@@ -213,21 +239,15 @@
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        console.error("API error", err);
         alert(err.detail || "Failed to estimate revenue.");
         return;
       }
 
       const data = await res.json();
 
-      // Expecting backend like:
-      // {
-      //   address: "123 Example St...",
-      //   revenue: 15870.23,
-      //   price_pred: 162.3,
-      //   occ_pred: 128.4,
-      //   uplift_chart_url: "https://...png"
-      // }
+      // ================================
+      // POPULATE RESULTS
+      // ================================
 
       const address = data.address || "Unknown address";
       const revenue = data.revenue ?? null;
@@ -243,9 +263,9 @@
       }
 
       if (price != null && occ != null) {
-        priceOccEl.innerText = `$${Math.round(price)} / night · ${Math.round(
-          occ
-        )} nights`;
+        priceOccEl.innerText = `$${Math.round(
+          price
+        )} / night · ${Math.round(occ)} nights`;
       } else {
         priceOccEl.innerText = "";
       }
@@ -253,21 +273,22 @@
       if (data.uplift_chart_png) {
         upliftImgEl.src = "data:image/png;base64," + data.uplift_chart_png;
         upliftImgEl.alt = "Amenity uplift chart";
-    } else {
+      } else {
         upliftImgEl.removeAttribute("src");
         upliftImgEl.alt = "No uplift chart available";
-    }
+      }
 
       outEmpty.classList.add("hidden");
       outContent.classList.remove("hidden");
+
     } catch (err) {
-      console.error(err);
       alert("Unexpected error while calling the API.");
     } finally {
       btn.disabled = false;
-      btn.innerText = "Estimate Revenue";
+      overlay.classList.add("hidden");
     }
   };
 </script>
+
     </body>
 </html>

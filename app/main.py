@@ -2,6 +2,7 @@
 import os
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi import FastAPI, Request
 import uvicorn
 from contextlib import asynccontextmanager
@@ -43,6 +44,7 @@ app.include_router(outputs.router)
 app.include_router(debug.router)
 app.include_router(api.router)
 
+app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
 
