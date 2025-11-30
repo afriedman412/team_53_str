@@ -56,6 +56,7 @@ data/geo/
 !data/README.md
 old_models/
 model/
+models/
 !models/.gitkeep
 !models/README.md
 

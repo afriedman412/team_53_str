@@ -1,4 +1,5 @@
 # app/main.py
+import os
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 from fastapi import FastAPI, Request
@@ -12,11 +13,20 @@ from app.core.loader import load_store
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+
+    # Skip heavy startup during tests
+    if os.environ.get("TESTING"):
+        print("⚠️ Skipping lifespan (test mode)")
+        yield
+        return
+
     print("🚀 App starting up — loading data...")
     store = load_store()
     set_store(store)
     app.state.store = store
+
     yield
+
     print("🧹 App shutting down — cleanup complete.")
 
 
@@ -42,4 +52,4 @@ async def home(request: Request):
 
 
 if __name__ == "__main__":
-    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("app.main:app", host="0.0.0.0", port=8000)

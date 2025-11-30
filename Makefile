@@ -1,75 +1,63 @@
-# -------------------------------
-# Python Virtual Environment Makefile
-# -------------------------------
+# ---------------------------
+# Settings
+# ---------------------------
 
-# Name of the virtual environment directory
-VENV_NAME = .venv
+# Where you want the venv to live (outside the repo)
+VENV_ROOT := $(HOME)/Documents/code
+VENV := $(VENV_ROOT)/team_53_venv
 
-PREFIX = ~/Documents/code
+PYTHON := $(VENV)/bin/python3.12
+PIP := $(VENV)/bin/pip
+UVICORN := $(VENV)/bin/uvicorn
 
-# Python interpreter to use
-PYTHON = python3.12
+APP := app.main:app
+REQUIREMENTS := requirements.txt
 
-# Requirements file
-REQ = requirements.txt
+# ---------------------------
+# PHONY targets
+# ---------------------------
+.PHONY: venv install run test clean reset
 
-# Directory where the venv bin directory lives
-BIN = $(PREFIX)/$(VENV_NAME)/bin
-
-# -------------------------------
-# Create venv
-# -------------------------------
+# ---------------------------
+# Create venv (in ~/Documents/code)
+# ---------------------------
 venv:
-	@if [ ! -d "$(PREFIX)/$(VENV_NAME)" ]; then \
-		echo "Creating virtual environment..."; \
-		$(PYTHON) -m venv $(PREFIX)/$(VENV_NAME); \
-		echo "Created venv in $(PREFIX)/$(VENV_NAME)"; \
-	else \
-		echo "Virtual environment already exists."; \
-	fi
+	@echo "🔧 Creating Python 3.12 virtual environment at $(VENV)..."
+	mkdir -p $(VENV_ROOT)
+	python3.12 -m venv $(VENV)
+	@echo "📦 Upgrading pip..."
+	$(PYTHON) -m pip install --upgrade pip setuptools wheel
 
-# -------------------------------
+# ---------------------------
 # Install dependencies
-# -------------------------------
+# ---------------------------
 install: venv
-	@if [ -f "$(REQ)" ]; then \
-		echo "Installing requirements..."; \
-		$(BIN)/pip install --upgrade pip; \
-		$(BIN)/pip install -r $(REQ); \
-	else \
-		echo "No requirements.txt found; skipping installation."; \
-	fi
+	@echo "📦 Installing dependencies..."
+	$(PIP) install -r $(REQUIREMENTS)
 
-# -------------------------------
-# Activate venv (prints instructions)
-# -------------------------------
-activate:
-	@echo "To activate the virtual environment, run:"
-	@echo "    source $(BIN)/activate"
+# ---------------------------
+# Run the API
+# ---------------------------
+run:
+	@echo "🚀 Starting FastAPI server..."
+	$(UVICORN) $(APP) --reload --port 8000
 
-# -------------------------------
-# Remove venv
-# -------------------------------
+# ---------------------------
+# Run tests with Python 3.12
+# ---------------------------
+test:
+	@echo "🧪 Running tests with Python 3.12..."
+	$(PYTHON) -m pytest -vv --disable-warnings
+
+# ---------------------------
+# Clean venv in ~/Documents/code
+# ---------------------------
 clean:
-	@if [ -d "$(PREFIX)/$(VENV_NAME)" ]; then \
-		echo "Removing virtual environment..."; \
-		rm -rf $(PREFIX)/$(VENV_NAME); \
-		echo "Removed."; \
-	else \
-		echo "No venv to remove."; \
-	fi
+	@echo "🧹 Removing external venv at $(VENV)..."
+	rm -rf $(VENV)
 
-# -------------------------------
-# Full reset: clean + create + install
-# -------------------------------
-reset: clean venv install
-	@echo "Environment reset complete."
-
-# -------------------------------
-# Freeze dependencies to requirements.txt
-# -------------------------------
-freeze:
-	$(BIN)/pip freeze > $(REQ)
-	@echo "Dependencies written to $(REQ)."
-
-.PHONY: venv install clean reset activate freeze
+# ---------------------------
+# Full reset (clean + reinstall)
+# ---------------------------
+reset: clean install
+	@echo "✨ Environment reset complete!"
