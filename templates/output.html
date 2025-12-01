@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Investment Analysis - STR Estimator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --gold: #C9A84A;
+            --navy: #1E2A39;
+            --light-blue: #A9C7E4;
+            --cyan: #78D0F8;
+            --light-gray: #F4F4F4;
+            --white: #FFFFFF;
+            --near-black: #1A1A1A;
+        }
+        body {
+            font-family: 'Montserrat', sans-serif;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen bg-[var(--light-gray)] text-[var(--near-black)]">
+    
+    <!-- GOLD HEADER BAR -->
+    <div class="w-full bg-[var(--gold)] py-6 shadow-md">
+        <div class="max-w-6xl mx-auto px-5 md:px-8">
+            <h1 class="text-3xl md:text-4xl font-semibold text-[var(--navy)] tracking-tight">
+                Property Investment Analysis
+            </h1>
+        </div>
+    </div>
+
+    <div class="max-w-5xl mx-auto py-10 px-4">
+        
+        <!-- Back to Home Link -->
+        <div class="mb-6">
+            <a href="/" class="text-[var(--navy)] hover:text-[var(--gold)] text-sm font-medium">
+                ← Back to Home
+            </a>
+        </div>
+
+        <!-- Property Address Header -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+            <p class="text-xs uppercase tracking-widest text-[var(--navy)]/50 mb-2">Property Address</p>
+            <h2 class="text-2xl md:text-3xl font-bold text-[var(--navy)] mb-3">
+                {{ address.address }}
+            </h2>
+            <div class="flex gap-3 flex-wrap">
+                <a href="{{ maps_url }}" target="_blank" 
+                   class="inline-flex items-center px-4 py-2 rounded-lg bg-[var(--navy)] text-white hover:bg-[var(--gold)] hover:text-[var(--navy)] transition-colors text-sm font-medium">
+                    📍 View on Maps
+                </a>
+            </div>
+        </div>
+
+        <!-- ML PREDICTIONS SECTION -->
+        <div class="bg-white rounded-xl shadow-lg p-8 mb-6">
+            <h3 class="text-2xl font-bold text-[var(--navy)] mb-6 pb-3 border-b-2 border-[var(--gold)]">
+                Machine Learning Predictions
+            </h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Predicted Price -->
+                <div class="text-center p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl">
+                    <p class="text-sm uppercase tracking-wide text-[var(--navy)]/70 mb-2 font-semibold">
+                        Predicted Price / Night
+                    </p>
+                    <p class="text-4xl font-bold text-blue-700">
+                        {{ price_pred if price_pred else "N/A" }}
+                    </p>
+                </div>
+                
+                <!-- Predicted Occupancy -->
+                <div class="text-center p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-xl">
+                    <p class="text-sm uppercase tracking-wide text-[var(--navy)]/70 mb-2 font-semibold">
+                        Predicted Occupancy
+                    </p>
+                    <p class="text-4xl font-bold text-green-700">
+                        {{ occ_pred if occ_pred else "N/A" }}
+                    </p>
+                </div>
+                
+                <!-- Predicted Revenue -->
+                <div class="text-center p-6 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl">
+                    <p class="text-sm uppercase tracking-wide text-[var(--navy)]/70 mb-2 font-semibold">
+                        Predicted Annual Revenue
+                    </p>
+                    <p class="text-4xl font-bold text-purple-700">
+                        {{ rev_pred if rev_pred else "N/A" }}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI ANALYSIS SECTION -->
+        {% if ai_summary %}
+        <div class="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl shadow-lg p-8 border-2 border-[var(--gold)]">
+            <div class="flex items-center gap-3 mb-6">
+                <svg class="w-10 h-10 text-[var(--gold)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                          d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z">
+                    </path>
+                </svg>
+                <h3 class="text-2xl font-bold text-[var(--navy)]">
+                    AI Investment Analysis
+                </h3>
+                <span class="ml-auto px-4 py-1.5 rounded-full bg-[var(--navy)] text-white text-xs font-bold uppercase tracking-wide">
+                    Powered by GPT-4
+                </span>
+            </div>
+            
+            <div class="prose prose-lg max-w-none text-gray-800 leading-relaxed whitespace-pre-line">
+                {{ ai_summary }}
+            </div>
+        </div>
+        {% elif ai_error %}
+        <div class="bg-yellow-50 rounded-xl shadow p-6 border border-yellow-200">
+            <div class="flex items-center gap-2 text-yellow-800">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                </svg>
+                <p class="text-sm font-medium">{{ ai_error }}</p>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Disclaimer -->
+        <div class="mt-8 text-center text-sm text-[var(--navy)]/60">
+            <p>ML predictions are based on historical Chicago STR data and property features.</p>
+            <p class="mt-1">AI analysis is generated by GPT and should be used as supplementary guidance.</p>
+            <p class="mt-1 font-semibold">Always conduct your own due diligence before making investment decisions.</p>
+        </div>
+        
+    </div>
+</body>
+</html>

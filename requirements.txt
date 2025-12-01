@@ -106,3 +106,4 @@ watchfiles==1.1.1
 wcwidth==0.2.14
 websockets==15.0.1
 wheel==0.45.1
+openai==1.59.5

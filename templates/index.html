@@ -201,94 +201,26 @@
 
         <!-- Existing JS preserved exactly -->
         <script>
-  const btn = document.getElementById("submit-btn");
-  const outEmpty = document.getElementById("output-empty");
-  const outContent = document.getElementById("output-content");
-  const overlay = document.getElementById("loading-overlay");
+            const btn = document.getElementById("submit-btn");
+            const overlay = document.getElementById("loading-overlay");
 
-  const addrEl = document.getElementById("addr");
-  const revEl = document.getElementById("rev");
-  const priceOccEl = document.getElementById("priceocc");
-  const upliftImgEl = document.getElementById("uplift-img");
+            btn.onclick = async (e) => {
+                e.preventDefault();
+    
+                const zurl = document.getElementById("zurl").value.trim();
 
-  btn.onclick = async () => {
-    const zurl = document.getElementById("zurl").value.trim();
-    const beds = document.getElementById("beds").value;
-    const baths = document.getElementById("baths").value;
-    const acc = document.getElementById("accommodates").value;
+                if (!zurl) {
+                alert("Please enter a Zillow URL.");
+                return;
+                }
 
-    if (!zurl) {
-      alert("Please enter a Zillow or Redfin URL.");
-      return;
-    }
-
-    btn.disabled = true;
-    overlay.classList.remove("hidden");
-
-    try {
-      const formData = new FormData();
-      formData.append("url", zurl);
-      formData.append("bedrooms", beds);
-      formData.append("bathrooms", baths);
-      formData.append("accommodates", acc);
-
-      const res = await fetch("api/perms_from_url", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        alert(err.detail || "Failed to estimate revenue.");
-        return;
-      }
-
-      const data = await res.json();
-
-      // ================================
-      // POPULATE RESULTS
-      // ================================
-
-      const address = data.address || "Unknown address";
-      const revenue = data.revenue ?? null;
-      const price = data.price_pred ?? null;
-      const occ = data.occ_pred ?? null;
-
-      addrEl.innerText = address;
-
-      if (revenue != null) {
-        revEl.innerText = `$${Math.round(revenue).toLocaleString()} / yr`;
-      } else {
-        revEl.innerText = "—";
-      }
-
-      if (price != null && occ != null) {
-        priceOccEl.innerText = `$${Math.round(
-          price
-        )} / night · ${Math.round(occ)} nights`;
-      } else {
-        priceOccEl.innerText = "";
-      }
-
-      if (data.uplift_chart_png) {
-        upliftImgEl.src = "data:image/png;base64," + data.uplift_chart_png;
-        upliftImgEl.alt = "Amenity uplift chart";
-      } else {
-        upliftImgEl.removeAttribute("src");
-        upliftImgEl.alt = "No uplift chart available";
-      }
-
-      outEmpty.classList.add("hidden");
-      outContent.classList.remove("hidden");
-
-    } catch (err) {
-      alert("Unexpected error while calling the API.");
-    } finally {
-      btn.disabled = false;
-      overlay.classList.add("hidden");
-    }
-  };
-</script>
+                // Show loading overlay
+                overlay.classList.remove("hidden");
+                
+                // Redirect to output page with URL parameter
+                window.location.href = "/output?url=" + encodeURIComponent(zurl);
+            };
+        </script>
 
     </body>
 </html>
