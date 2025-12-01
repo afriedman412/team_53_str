@@ -75,7 +75,7 @@ steps:
         '4Gi', 
         '--cpu',
         '1',
-        '--set-secrets',
+        '--update-secrets',
         'OPENAI_API_KEY=openai-api-key:latest'
       ]
 
