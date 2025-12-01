@@ -3,8 +3,8 @@
 # ---------------------------
 
 # Where you want the venv to live (outside the repo)
-VENV_ROOT := $(HOME)/Documents/code
-VENV := $(VENV_ROOT)/team_53_venv
+
+VENV := venv
 
 PYTHON := $(VENV)/bin/python3.12
 PIP := $(VENV)/bin/pip
@@ -23,7 +23,6 @@ REQUIREMENTS := requirements.txt
 # ---------------------------
 venv:
 	@echo "🔧 Creating Python 3.12 virtual environment at $(VENV)..."
-	mkdir -p $(VENV_ROOT)
 	python3.12 -m venv $(VENV)
 	@echo "📦 Upgrading pip..."
 	$(PYTHON) -m pip install --upgrade pip setuptools wheel

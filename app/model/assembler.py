@@ -15,7 +15,6 @@ from app.model.embedder import PerformanceGraphEmbedderV3
 from app.model.base_model import LightGBMRegressorCV
 from app.model.rev_modeler import RevenueModeler
 from app.model.helpers import (
-    get_modeling_columns,
     check_schema_compatibility,
     canonical_data_cleaning,
 )
@@ -77,7 +76,8 @@ class Pops:
         # If no embedder, build + train it
         if self.embedder is not None:
             self._build_embedder()
-            self.embeddings = self.embedder.fit_transform(training_df, self.city_col)
+            self.embeddings = self.embedder.fit_transform(
+                training_df, self.city_col)
         return self.embeddings
 
     def fit_with_library(self, training_df):
@@ -94,9 +94,11 @@ class Pops:
         df_with_embeddings = pd.concat([training_df, self.embeddings], axis=1)
         self.training_library["df_with_embeddings"] = df_with_embeddings
         print("*** PRICE MODEL")
-        self.price_model = self._run_model("price", df_with_embeddings, evaluate=True)
+        self.price_model = self._run_model(
+            "price", df_with_embeddings, evaluate=True)
         print("*** OCCUPANCY MODEL")
-        self.occ_model = self._run_model("occupancy", df_with_embeddings, evaluate=True)
+        self.occ_model = self._run_model(
+            "occupancy", df_with_embeddings, evaluate=True)
 
         rm = RevenueModeler()
 
@@ -130,12 +132,14 @@ class Pops:
         print("*** PRICE MODEL")
         self.price_model = self._run_model("price", modeling_df, evaluate=True)
         print("*** OCCUPANCY MODEL")
-        self.occ_model = self._run_model("occupancy", modeling_df, evaluate=True)
+        self.occ_model = self._run_model(
+            "occupancy", modeling_df, evaluate=True)
 
         rm = RevenueModeler()
 
         print("*** REVENUE MODEL")
-        X_corr, y_corr, _ = rm.prepare_training_data(modeling_df, self.price_model, self.occ_model)
+        X_corr, y_corr, _ = rm.prepare_training_data(
+            modeling_df, self.price_model, self.occ_model)
         check_schema_compatibility(X_corr, RevenueTrainingSchema)
         rm.fit(X_corr, y_corr)
         self.rev_model = rm
@@ -167,13 +171,16 @@ class Pops:
         required_cols = ["latitude", "longitude"]
         missing = [c for c in required_cols if c not in df_input.columns]
         if missing:
-            raise ValueError(f"Missing required columns for embedding: {missing}")
+            raise ValueError(
+                f"Missing required columns for embedding: {missing}")
 
         # 1) Build embeddings for input data (virgin or not)
         print("*** GETTING EMBEDDINGS")
         if not self.can_embed_new:
-            raise RuntimeError("Embedder not available; cannot embed new listings.")
-        new_embeddings = self.embedder.transform(df_input, city_col=self.city_col)
+            raise RuntimeError(
+                "Embedder not available; cannot embed new listings.")
+        new_embeddings = self.embedder.transform(
+            df_input, city_col=self.city_col)
 
         # 2) Build feature matrix
         df_input = df_input[self.structural_cols]
@@ -255,9 +262,11 @@ class Pops:
         # 1. SCHEMA VALIDATION ON FULL DF
         # ------------------------------------------------------------
         if model_key == "price":
-            check_schema_compatibility(df, PriceTrainingSchema, df_name="price_training_df")
+            check_schema_compatibility(
+                df, PriceTrainingSchema, df_name="price_training_df")
         elif model_key == "occupancy":
-            check_schema_compatibility(df, OccupancyTrainingSchema, df_name="occ_training_df")
+            check_schema_compatibility(
+                df, OccupancyTrainingSchema, df_name="occ_training_df")
         # Revenue schema is validated after prepare_training_data
 
         # ------------------------------------------------------------
@@ -302,7 +311,8 @@ class Pops:
             )
 
         # Now validate the actual X frame
-        check_schema_compatibility(X, FullTrainingSchema, df_name=f"{model_key}_X")
+        check_schema_compatibility(
+            X, FullTrainingSchema, df_name=f"{model_key}_X")
 
         # ------------------------------------------------------------
         # 5. Validate y
@@ -311,7 +321,8 @@ class Pops:
             raise ValueError(f"Target '{target}' contains null values.")
 
         if not np.issubdtype(y.dtype, np.number):
-            raise TypeError(f"Target '{target}' must be numeric, got dtype {y.dtype}.")
+            raise TypeError(
+                f"Target '{target}' must be numeric, got dtype {y.dtype}.")
 
         return X, y
 
@@ -319,7 +330,8 @@ class Pops:
         import shap
 
         # price + occupancy = simple
-        self.price_explainer = shap.TreeExplainer(self.price_model._fold_models[0])
+        self.price_explainer = shap.TreeExplainer(
+            self.price_model._fold_models[0])
         self.occ_explainer = shap.TreeExplainer(self.occ_model._fold_models[0])
 
         # revenue = complicated
@@ -336,14 +348,16 @@ class Pops:
         if not hasattr(self, "price_explainer") or self.price_explainer is None:
             raise RuntimeError("Price SHAP explainer not available.")
         # ensure embeddings are present
-        df_inp_w_emb = df_input.join(self.embedder.transform(df_input, city_col=self.city_col))
+        df_inp_w_emb = df_input.join(
+            self.embedder.transform(df_input, city_col=self.city_col))
         X = df_inp_w_emb[self.modeling_cols]
         return self.price_explainer(X)
 
     def shap_occ(self, df_input: pd.DataFrame):
         if not hasattr(self, "occ_explainer") or self.occ_explainer is None:
             raise RuntimeError("Occupancy SHAP explainer not available.")
-        df_inp_w_emb = df_input.join(self.embedder.transform(df_input, city_col=self.city_col))
+        df_inp_w_emb = df_input.join(
+            self.embedder.transform(df_input, city_col=self.city_col))
         X = df_inp_w_emb[self.modeling_cols]
         return self.occ_explainer(X)
 
@@ -352,7 +366,8 @@ class Pops:
         Because it's more complicated.
         """
         if len(df_input.filter(regex="perf")) == 0:
-            df_input = df_input.join(self.embedder.transform(df_input, city_col=self.city_col))
+            df_input = df_input.join(self.embedder.transform(
+                df_input, city_col=self.city_col))
         price_pred = self.price_model.predict(df_input)
         occ_pred = self.occ_model.predict(df_input)
 
@@ -471,7 +486,8 @@ class Pops:
                 color=CSG_PALETTE[0],  # gold
             )
 
-            ax.set_title("Amenity Uplift (Annual Revenue)", color=CSG_PALETTE[1])
+            ax.set_title("Amenity Uplift (Annual Revenue)",
+                         color=CSG_PALETTE[1])
             ax.set_xlabel("Revenue change ($)")
             ax.axvline(0, color=CSG_PALETTE[5], linewidth=1)  # near black
             ax.grid(axis="x", alpha=0.15)

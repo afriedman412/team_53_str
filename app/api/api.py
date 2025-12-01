@@ -36,7 +36,8 @@ async def api_from_url(url: str = Form(..., description="Zillow or Redfin listin
         return ORJSONResponse(content=result, status_code=200)
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to process URL: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to process URL: {e}")
 
 
 @router.post("/preds_from_url", response_class=ORJSONResponse)
@@ -52,11 +53,8 @@ async def preds_from_url(
     """
     store = get_store()
 
-    # 1) Get address (and possibly other metadata) from the URL
     address = extract_address_from_url(url)
 
-    # 2) Build the base row, injecting user overrides
-    # Adjust this to match your actual build_base signature
     base = build_base(address=address)
     base.update(SCENARIO_DEFAULTS)
 
@@ -71,7 +69,7 @@ async def preds_from_url(
     base_df = scenario_df_verify(pd.DataFrame(base, index=[0]))
     base_df["dist_to_bus_km"] = 50
     base_df, changes = coerce_df_to_match_schema(base_df, StructuralSchema)
-    # 3) Generate predictions
+
     preds = store.pipeline.predict(base_df).to_dict()
 
     return ORJSONResponse(content=preds, status_code=200)

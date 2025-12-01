@@ -74,7 +74,9 @@ steps:
         '--memory',
         '4Gi', 
         '--cpu',
-        '1'
+        '1',
+        '--set-secrets',
+        'OPENAI_API_KEY=openai-api-key:latest'
       ]
 
 images:

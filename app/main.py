@@ -1,4 +1,5 @@
 # app/main.py
+from dotenv import load_dotenv
 import os
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
@@ -6,10 +7,12 @@ from fastapi.staticfiles import StaticFiles
 from fastapi import FastAPI, Request
 import uvicorn
 from contextlib import asynccontextmanager
-from app.api import inputs, distances, debug, outputs, api
+from app.api import inputs, distances, debug, api, outputs
 from app.core.store import DataStore
 from app.core.registry import set_store
 from app.core.loader import load_store
+
+load_dotenv()
 
 
 @asynccontextmanager
@@ -51,6 +54,11 @@ templates = Jinja2Templates(directory="templates")
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
+
+
+@app.get("/ai_test", response_class=HTMLResponse)
+async def ai_test(request: Request):
+    return templates.TemplateResponse("ai_test.html", {"request": request})
 
 
 if __name__ == "__main__":

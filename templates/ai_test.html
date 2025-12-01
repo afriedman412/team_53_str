@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Chicago STR Analyzer</title>
+
+        <link
+            href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+            rel="stylesheet">
+    </head>
+
+    <body class="bg-gray-100 min-h-screen flex items-center justify-center p-6">
+
+        <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-xl">
+            <h1 class="text-2xl font-semibold mb-6 text-center">
+                Chicago STR Prediction Input
+            </h1>
+
+            <form action="/output/preds_w_AI" method="post" class="space-y-6">
+
+                <!-- URL -->
+                <div>
+                    <label class="block text-sm font-medium mb-1">
+                        Zillow URL
+                    </label>
+                    <input
+                        type="text"
+                        name="url"
+                        class="w-full border rounded-lg p-2"
+                        value="https://www.zillow.com/homedetails/1318-N-Sutton-Pl-Chicago-IL-60610/3856577_zpid/"
+                        required>
+                </div>
+
+                <!-- Bedrooms -->
+                <div>
+                    <label class="block text-sm font-medium mb-1">
+                        Bedrooms
+                    </label>
+                    <input
+                        type="number"
+                        name="bedrooms"
+                        class="w-full border rounded-lg p-2"
+                        value="2"
+                        required>
+                </div>
+
+                <!-- Bathrooms -->
+                <div>
+                    <label class="block text-sm font-medium mb-1">
+                        Bathrooms
+                    </label>
+                    <input
+                        type="number"
+                        step="0.5"
+                        name="bathrooms"
+                        class="w-full border rounded-lg p-2"
+                        value="2"
+                        required>
+                </div>
+
+                <!-- Occupancy -->
+                <div>
+                    <label class="block text-sm font-medium mb-1">
+                        Accommodates (# of guests)
+                    </label>
+                    <input
+                        type="number"
+                        name="accommodates"
+                        class="w-full border rounded-lg p-2"
+                        value="4"
+                        required>
+                </div>
+
+                <!-- Submit -->
+                <button
+                    type="submit"
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-lg font-medium">
+                    Run Prediction + AI Analysis
+                </button>
+
+            </form>
+        </div>
+
+    </body>
+</html>
