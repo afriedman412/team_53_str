@@ -76,7 +76,7 @@ steps:
         '--cpu',
         '1',
         '--update-secrets',
-        'OPENAI_API_KEY=openai-api-key:latest'
+        'OPENAI_KEY=openai-api-key:latest'
       ]
 
 images:
